@@ -1,0 +1,51 @@
+{
+  "name": "zustand-x",
+  "version": "1.0.0",
+  "description": "",
+  "keywords": [
+
+  ],
+  "license": "MIT",
+  "repository": "https://github.com/leonwgc/zustand-x",
+  "bugs": {
+    "url": "https://github.com/leonwgc/zustand-x/issues"
+  },
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.esm.js",
+  "typings": "types/index.d.ts",
+  "scripts": {
+    "build": "tsup && tsc",
+    "dev": "tsup --watch",
+    "docs": "node pack --doc",
+    "start": "node pack",
+    "prepublishOnly": "npm run build",
+    "publish--patch": "./publish.sh patch",
+    "publish--minor": "./publish.sh minor",
+    "publish--major": "./publish.sh major"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "zustand": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.10",
+    "@typescript-eslint/eslint-plugin": "^5.6.0",
+    "@typescript-eslint/parser": "^5.6.0",
+    "eslint": "^8.34.0",
+    "eslint-plugin-react": "^7.19.0",
+    "eslint-plugin-react-hooks": "^2.5.0",
+    "packrs": "^1.0.1",
+    "prettier": "^2.2.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "tsup": "^8.3.6",
+    "typescript": "^5.7.3",
+    "yargs": "^15.3.1"
+  },
+  "files": [
+    "dist",
+    "types"
+  ]
+}
