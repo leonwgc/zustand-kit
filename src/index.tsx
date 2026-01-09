@@ -13,6 +13,14 @@ import { useMemo } from 'react';
 const globalStates = new Map<string, UseBoundStore<StoreApi<unknown>>>();
 
 /**
+ * Clear all global states (for testing purposes)
+ * @internal
+ */
+export function __clearAllStates__() {
+  globalStates.clear();
+}
+
+/**
  * Storage type for persistence
  */
 export type StorageType = 'localStorage' | 'sessionStorage' | 'none';

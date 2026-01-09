@@ -264,6 +264,21 @@ const [user, setUser] = useGlobalState<User>('user', {
 | Selectors | ✅ | ✅ | ✅ | ❌ |
 | Ease of Use | ⭐️⭐️⭐️⭐️⭐️ | ⭐️⭐️⭐️⭐️ | ⭐️⭐️ | ⭐️⭐️⭐️ |
 
+## 🧪 Testing
+
+```bash
+# Run tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Generate coverage report
+npm run test:coverage
+```
+
+Test Coverage: 93%+ (statements, branches, functions)
+
 ## 📄 License
 
 MIT
