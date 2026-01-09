@@ -20,7 +20,7 @@
     "strictNullChecks": false,
     "removeComments": false,
     "declarationDir": "types",
-    "lib": ["es2015", "DOM"],
+    "lib": ["es2020", "esnext", "dom"],
     "paths": {
       "antd-form-render": ["src"]
     }
