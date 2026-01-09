@@ -607,7 +607,7 @@ const NonReactUsageExample: React.FC = () => {
           }}
         >
           {`// In any utility or service file
-import { getGlobalState, setGlobalState } from '~/hooks/useGlobalState';
+import { getGlobalState, setGlobalState } from 'zustand-kit';
 
 // Get current value
 const count = getGlobalState<number>('counter');
@@ -756,7 +756,7 @@ const Example: React.FC = () => {
         <Title level={5}>1. useGlobalState - 基础 Hook</Title>
         <Paragraph>
           <pre className="use-global-state-example__code">
-            {`import { useGlobalState } from '~/hooks/useGlobalState';
+            {`import { useGlobalState } from 'zustand-kit';
 
 // 简单值类型 (number, string, boolean)
 const [count, setCount, resetCount] = useGlobalState('counter', 0);
@@ -777,7 +777,7 @@ setUser(prev => ({ ...prev, age: 26 })); // 函数式更新`}
         <Title level={5}>2. useGlobalSelector - 细粒度订阅（性能优化）</Title>
         <Paragraph>
           <pre className="use-global-state-example__code">
-            {`import { useGlobalSelector } from '~/hooks/useGlobalState';
+            {`import { useGlobalSelector } from 'zustand-kit';
 
 // 只订阅特定字段，其他字段变化不会触发重渲染
 const userName = useGlobalSelector('user', state => state.name);
@@ -796,7 +796,7 @@ const userInfo = useGlobalSelector('user', state => ({
         <Title level={5}>3. useGlobalSetter - 只写模式（性能优化）</Title>
         <Paragraph>
           <pre className="use-global-state-example__code">
-            {`import { useGlobalSetter } from '~/hooks/useGlobalState';
+            {`import { useGlobalSetter } from 'zustand-kit';
 
 // 只获取 setter，不订阅状态变化
 const setCount = useGlobalSetter<number>('counter');
@@ -813,7 +813,7 @@ setUser({ name: 'Jane' });
         <Title level={5}>4. Persistence - localStorage / sessionStorage</Title>
         <Paragraph>
           <pre className="use-global-state-example__code">
-            {`import { useGlobalState } from '~/hooks/useGlobalState';
+            {`import { useGlobalState } from 'zustand-kit';
 
 // localStorage - 持久化存储，跨浏览器会话
 const [settings, setSettings] = useGlobalState(
@@ -846,7 +846,7 @@ const [volatileData] = useGlobalState('volatile', { data: [] });
   setGlobalState,
   subscribeGlobalState,
   resetGlobalState
-} from '~/hooks/useGlobalState';
+} from 'zustand-kit';
 
 // 1. 获取状态值
 const count = getGlobalState<number>('counter');
