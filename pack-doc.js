@@ -1,12 +1,15 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { run } = require('packrs');
+const { build } = require('packrs');
 
-run({
+build({
   index: `./demo/index`,
-  port: 9009,
+  dist: './docs',
   rsConfig: {
     html: {
       title: 'Zustand-X Demo',
+    },
+    output: {
+      assetPrefix: './',
     },
   },
 });

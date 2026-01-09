@@ -1,0 +1,83 @@
+/**
+ * @file src/pages/Hooks/UseGlobalStateExample.scss
+ * @author leon.wang
+ */
+
+// @import 'scss/common.scss';
+
+.use-global-state-example {
+  padding: 24px;
+
+  &__row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+
+  &__card {
+    height: 100%;
+
+    .ant-card-body {
+      min-height: 200px;
+    }
+  }
+
+  &__profile {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  &__avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: bold;
+  }
+
+  &__product {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid #f0f0f0;
+    border-radius: 4px;
+    transition: all 0.3s;
+
+    &:hover {
+      border-color: #1890ff;
+      box-shadow: 0 2px 8px rgba(24, 144, 255, 0.1);
+    }
+  }
+
+  &__cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+  }
+
+  &__total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 18px;
+  }
+
+  &__code {
+    background: #f6f7f9;
+    padding: 16px;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+}
