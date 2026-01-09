@@ -1,6 +1,6 @@
 {
   "name": "zustand-kit",
-  "version": "0.9.1",
+  "version": "1.0.0",
   "description": "⚡️ A minimalist React global state management library based on Zustand with persistence, TypeScript and fine-grained subscriptions",
   "keywords": [
     "zustand",
