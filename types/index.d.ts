@@ -3,6 +3,11 @@
  * @author leon.wang
  */
 /**
+ * Clear all global states (for testing purposes)
+ * @internal
+ */
+export declare function __clearAllStates__(): void;
+/**
  * Storage type for persistence
  */
 export type StorageType = 'localStorage' | 'sessionStorage' | 'none';
