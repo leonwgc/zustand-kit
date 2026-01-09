@@ -1,5 +1,5 @@
 /**
- * @file src/pages/Hooks/UseGlobalStateExample.tsx
+ * @file src/pages/Hooks/Example.tsx
  * @author leon.wang
  */
 
@@ -14,7 +14,7 @@ import {
   subscribeGlobalState,
   resetGlobalState,
 } from '../src/index';
-import './UseGlobalStateExample.scss';
+import './Example.scss';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -653,7 +653,7 @@ const NonReactStateDisplay: React.FC = () => {
   );
 };
 
-const UseGlobalStateExample: React.FC = () => {
+const Example: React.FC = () => {
   const [showOptimized, setShowOptimized] = useState(false);
 
   return (
@@ -928,4 +928,4 @@ const setUser = useGlobalSetter('user');
   );
 };
 
-export default UseGlobalStateExample;
+export default Example;
