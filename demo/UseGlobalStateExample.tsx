@@ -658,15 +658,7 @@ const UseGlobalStateExample: React.FC = () => {
 
   return (
     <div className="use-global-state-example">
-      <Title level={2}>useGlobalState Hook - 全局状态共享</Title>
-      <Paragraph>
-        基于 Zustand 实现的轻量级全局状态管理 Hook，支持跨组件状态共享，无需
-        Context 或 Provider。
-        <br />
-        <Text strong style={{ color: '#1890ff' }}>
-          ✨ 新增性能优化 Hooks：useGlobalSelector 和 useGlobalSetter
-        </Text>
-      </Paragraph>
+      <Title level={2}>基于 Zustand 的全局状态共享</Title>
 
       <Title level={3}>1. Simple Value - useGlobalState</Title>
       <Paragraph>
