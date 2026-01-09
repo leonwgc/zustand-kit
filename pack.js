@@ -7,7 +7,7 @@ run({
   port: 9009,
   rsConfig: {
     html: {
-      title: 'Zustand-X Demo',
+      title: 'zustand-kit Demo',
     },
   },
 });

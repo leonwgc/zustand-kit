@@ -1,5 +1,5 @@
 {
-  "name": "zustand-x",
+  "name": "zustand-kit",
   "version": "0.9.1",
   "description": "⚡️ A minimalist React global state management library based on Zustand with persistence, TypeScript and fine-grained subscriptions",
   "keywords": [
@@ -9,9 +9,9 @@
     "hooks"
   ],
   "license": "MIT",
-  "repository": "https://github.com/leonwgc/zustand-x",
+  "repository": "https://github.com/leonwgc/zustand-kit",
   "bugs": {
-    "url": "https://github.com/leonwgc/zustand-x/issues"
+    "url": "https://github.com/leonwgc/zustand-kit/issues"
   },
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",

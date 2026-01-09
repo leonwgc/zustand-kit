@@ -1,6 +1,6 @@
 # Test Coverage Summary
 
-This document provides an overview of the test suite for zustand-x.
+This document provides an overview of the test suite for zustand-kit.
 
 ## Test Files
 

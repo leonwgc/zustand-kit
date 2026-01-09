@@ -6,7 +6,7 @@ build({
   dist: './docs',
   rsConfig: {
     html: {
-      title: 'Zustand-X Demo',
+      title: 'Zustand-Kit Demo',
     },
     output: {
       assetPrefix: './',

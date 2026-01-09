@@ -1,4 +1,4 @@
-# zustand-x
+# zustand-kit
 
 [English](./README_EN.md) | 简体中文
 
@@ -17,11 +17,11 @@
 ## 📦 安装
 
 ```bash
-npm install zustand-x zustand
+npm install zustand-kit zustand
 # 或
-yarn add zustand-x zustand
+yarn add zustand-kit zustand
 # 或
-pnpm add zustand-x zustand
+pnpm add zustand-kit zustand
 ```
 
 ## 🎯 快速开始
@@ -29,7 +29,7 @@ pnpm add zustand-x zustand
 ### 基础用法
 
 ```tsx
-import { useGlobalState } from 'zustand-x';
+import { useGlobalState } from 'zustand-kit';
 
 function Counter() {
   const [count, setCount, resetCount] = useGlobalState('counter', 0);
@@ -48,7 +48,7 @@ function Counter() {
 ### 对象状态（支持部分更新）
 
 ```tsx
-import { useGlobalState } from 'zustand-x';
+import { useGlobalState } from 'zustand-kit';
 
 function UserProfile() {
   const [user, setUser, resetUser] = useGlobalState('user', {
@@ -74,7 +74,7 @@ function UserProfile() {
 ### 持久化状态
 
 ```tsx
-import { useGlobalState } from 'zustand-x';
+import { useGlobalState } from 'zustand-kit';
 
 function Settings() {
   // 使用 localStorage 持久化
@@ -108,7 +108,7 @@ function Settings() {
 ### 选择器模式（性能优化）
 
 ```tsx
-import { useGlobalSelector } from 'zustand-x';
+import { useGlobalSelector } from 'zustand-kit';
 
 function UserName() {
   // 仅订阅 user.name，其他字段变化不会触发重渲染
@@ -128,7 +128,7 @@ function UserEmail() {
 ### 仅获取 Setter（不订阅状态）
 
 ```tsx
-import { useGlobalSetter } from 'zustand-x';
+import { useGlobalSetter } from 'zustand-kit';
 
 function IncrementButton() {
   // 只获取 setter，不订阅状态变化（不会重渲染）
@@ -144,7 +144,7 @@ function IncrementButton() {
 
 ## 🔧 非 React 环境使用
 
-zustand-x 提供了独立的 API，可以在非 React 组件中使用：
+zustand-kit 提供了独立的 API，可以在非 React 组件中使用：
 
 ```typescript
 import {
@@ -152,7 +152,7 @@ import {
   setGlobalState,
   subscribeGlobalState,
   resetGlobalState
-} from 'zustand-x';
+} from 'zustand-kit';
 
 // 获取状态
 const count = getGlobalState<number>('counter');
@@ -225,7 +225,7 @@ resetGlobalState('counter');
 
 ## 🎨 TypeScript 支持
 
-zustand-x 使用 TypeScript 编写，提供完整的类型推断：
+zustand-kit 使用 TypeScript 编写，提供完整的类型推断：
 
 ```typescript
 // 自动推断类型
@@ -254,7 +254,7 @@ const [user, setUser] = useGlobalState<User>('user', {
 
 ## 🤝 对比其他方案
 
-| 特性 | zustand-x | Zustand | Redux | Context API |
+| 特性 | zustand-kit | Zustand | Redux | Context API |
 |------|-----------|---------|-------|-------------|
 | 学习曲线 | ⭐️ 简单 | ⭐️⭐️ 较简单 | ⭐️⭐️⭐️ 复杂 | ⭐️⭐️ 中等 |
 | 包体积 | 极小 | 小 | 大 | 无 |
@@ -285,8 +285,8 @@ MIT
 
 ## 🔗 链接
 
-- [GitHub](https://github.com/leonwgc/zustand-x)
-- [Issues](https://github.com/leonwgc/zustand-x/issues)
+- [GitHub](https://github.com/leonwgc/zustand-kit)
+- [Issues](https://github.com/leonwgc/zustand-kit/issues)
 - [Zustand](https://github.com/pmndrs/zustand)
 
 ## 👨‍💻 作者

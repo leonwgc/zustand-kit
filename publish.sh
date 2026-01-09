@@ -7,7 +7,7 @@ set -e
 
 VERSION_TYPE=${1:-patch}
 
-echo "🚀 准备发布 zustand-x"
+echo "🚀 准备发布 zustand-kit"
 
 # 检查是否有未提交的更改
 if [[ -n $(git status -s) ]]; then
@@ -43,4 +43,4 @@ echo "📤 发布到 npm..."
 npm publish
 
 echo "✨ 发布成功! 版本: $NEW_VERSION"
-echo "🔗 https://www.npmjs.com/package/zustand-x"
+echo "🔗 https://www.npmjs.com/package/zustand-kit"

@@ -1,4 +1,4 @@
-# zustand-x
+# zustand-kit
 
 English | [简体中文](./README.md)
 
@@ -17,11 +17,11 @@ A lightweight and flexible state management library for React built on top of Zu
 ## 📦 Installation
 
 ```bash
-npm install zustand-x zustand
+npm install zustand-kit zustand
 # or
-yarn add zustand-x zustand
+yarn add zustand-kit zustand
 # or
-pnpm add zustand-x zustand
+pnpm add zustand-kit zustand
 ```
 
 ## 🎯 Quick Start
@@ -29,7 +29,7 @@ pnpm add zustand-x zustand
 ### Basic Usage
 
 ```tsx
-import { useGlobalState } from 'zustand-x';
+import { useGlobalState } from 'zustand-kit';
 
 function Counter() {
   const [count, setCount, resetCount] = useGlobalState('counter', 0);
@@ -48,7 +48,7 @@ function Counter() {
 ### Object State (Partial Updates Supported)
 
 ```tsx
-import { useGlobalState } from 'zustand-x';
+import { useGlobalState } from 'zustand-kit';
 
 function UserProfile() {
   const [user, setUser, resetUser] = useGlobalState('user', {
@@ -74,7 +74,7 @@ function UserProfile() {
 ### Persisted State
 
 ```tsx
-import { useGlobalState } from 'zustand-x';
+import { useGlobalState } from 'zustand-kit';
 
 function Settings() {
   // Persist with localStorage
@@ -108,7 +108,7 @@ function Settings() {
 ### Selector Pattern (Performance Optimization)
 
 ```tsx
-import { useGlobalSelector } from 'zustand-x';
+import { useGlobalSelector } from 'zustand-kit';
 
 function UserName() {
   // Only subscribe to user.name, won't re-render when other fields change
@@ -128,7 +128,7 @@ function UserEmail() {
 ### Setter Only (No State Subscription)
 
 ```tsx
-import { useGlobalSetter } from 'zustand-x';
+import { useGlobalSetter } from 'zustand-kit';
 
 function IncrementButton() {
   // Only get setter, don't subscribe to state changes (won't re-render)
@@ -144,7 +144,7 @@ function IncrementButton() {
 
 ## 🔧 Non-React Usage
 
-zustand-x provides standalone APIs that can be used outside React components:
+zustand-kit provides standalone APIs that can be used outside React components:
 
 ```typescript
 import {
@@ -152,7 +152,7 @@ import {
   setGlobalState,
   subscribeGlobalState,
   resetGlobalState
-} from 'zustand-x';
+} from 'zustand-kit';
 
 // Get state
 const count = getGlobalState<number>('counter');
@@ -225,7 +225,7 @@ Reset global state to initial value (non-React environment).
 
 ## 🎨 TypeScript Support
 
-zustand-x is written in TypeScript and provides full type inference:
+zustand-kit is written in TypeScript and provides full type inference:
 
 ```typescript
 // Automatic type inference
@@ -254,7 +254,7 @@ const [user, setUser] = useGlobalState<User>('user', {
 
 ## 🤝 Comparison
 
-| Feature | zustand-x | Zustand | Redux | Context API |
+| Feature | zustand-kit | Zustand | Redux | Context API |
 |---------|-----------|---------|-------|-------------|
 | Learning Curve | ⭐️ Easy | ⭐️⭐️ Moderate | ⭐️⭐️⭐️ Complex | ⭐️⭐️ Moderate |
 | Bundle Size | Tiny | Small | Large | None |
@@ -285,8 +285,8 @@ MIT
 
 ## 🔗 Links
 
-- [GitHub](https://github.com/leonwgc/zustand-x)
-- [Issues](https://github.com/leonwgc/zustand-x/issues)
+- [GitHub](https://github.com/leonwgc/zustand-kit)
+- [Issues](https://github.com/leonwgc/zustand-kit/issues)
 - [Zustand](https://github.com/pmndrs/zustand)
 
 ## 👨‍💻 Author
