@@ -19,8 +19,6 @@
   "scripts": {
     "build": "tsup && tsc",
     "dev": "tsup --watch",
-    "docs": "node pack.mjs --doc",
-    "start": "node pack.mjs",
     "prepublishOnly": "npm run build",
     "publish--patch": "./publish.sh patch",
     "publish--minor": "./publish.sh minor",

@@ -3,7 +3,7 @@
  * @author leon.wang
  */
 
-import { create, StoreApi, UseBoundStore } from 'zustand';
+import { create, StoreApi, UseBoundStore, StateCreator } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { useMemo } from 'react';
 
@@ -84,7 +84,7 @@ export function useGlobalState<T>(
 
     type StoreState = { value: T; setValue: (value: unknown) => void; reset: () => void };
 
-    const stateCreator = (set: (partial: Partial<StoreState> | ((state: StoreState) => Partial<StoreState>)) => void): StoreState => ({
+    const stateCreator: StateCreator<StoreState, [], []> = (set) => ({
       value: initialState,
       setValue: (value) => {
         if (typeof value === 'function') {
@@ -244,6 +244,8 @@ export function subscribeGlobalState<T>(
       // eslint-disable-next-line no-console
       console.warn(`Global state with key "${key}" not found. Initialize it with useGlobalState first.`);
     }
+    // Return no-op unsubscribe function
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     return () => {};
   }
 

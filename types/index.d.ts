@@ -1,5 +1,5 @@
 /**
- * @file src/hooks/useGlobalState.tsx
+ * @file src/index.tsx
  * @author leon.wang
  */
 /**
