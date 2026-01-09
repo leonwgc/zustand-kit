@@ -1,7 +1,7 @@
 {
   "name": "zustand-x",
   "version": "0.1.0",
-  "description": "A lightweight and flexible state management library for React built on top of Zustand.",
+  "description": "⚡️ A minimalist React global state management library based on Zustand with persistence, TypeScript and fine-grained subscriptions",
   "keywords": [
     "zustand",
     "react",

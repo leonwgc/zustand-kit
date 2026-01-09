@@ -3,6 +3,7 @@ const { run } = require('packrs');
 
 run({
   index: `./demo/index`,
+  outDir: './.dev',
   port: 9009,
   rsConfig: {
     html: {
