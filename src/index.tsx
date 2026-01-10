@@ -5,7 +5,7 @@
 
 import { create, StoreApi, UseBoundStore, StateCreator } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { useMemo } from 'react';
+import { useMemo, useSyncExternalStore } from 'react';
 
 /**
  * Global state storage
@@ -24,6 +24,22 @@ export function __clearAllStates__() {
  * Storage type for persistence
  */
 export type StorageType = 'localStorage' | 'sessionStorage' | 'none';
+
+/**
+ * Helper type for setter value - supports partial updates for objects
+ */
+type SetterValue<T> = T extends Record<string, unknown>
+  ? Partial<T> | ((prev: T) => T)
+  : T | ((prev: T) => T);
+
+/**
+ * Internal store state structure
+ */
+type StoreState<T> = {
+  value: T;
+  setValue: (value: SetterValue<T> | ((prev: T) => T)) => void;
+  reset: () => void;
+};
 
 /**
  * Options for useGlobalState
@@ -80,19 +96,13 @@ export function useGlobalState<T>(
   key: string,
   initialState: T,
   options?: UseGlobalStateOptions
-): [
-  T,
-  (value: T extends Record<string, unknown> ? Partial<T> | ((prev: T) => T) : T | ((prev: T) => T)) => void,
-  () => void
-] {
+): [T, (value: SetterValue<T>) => void, () => void] {
   const { storage = 'none', storageKey = 'global-state' } = options || {};
 
   if (!globalStates.has(key)) {
     const isObject = typeof initialState === 'object' && initialState !== null && !Array.isArray(initialState);
 
-    type StoreState = { value: T; setValue: (value: unknown) => void; reset: () => void };
-
-    const stateCreator: StateCreator<StoreState, [], []> = (set) => ({
+    const stateCreator: StateCreator<StoreState<T>, [], []> = (set) => ({
       value: initialState,
       setValue: (value) => {
         if (typeof value === 'function') {
@@ -109,13 +119,13 @@ export function useGlobalState<T>(
       reset: () => set({ value: initialState }),
     });
 
-    let store: UseBoundStore<StoreApi<StoreState>>;
+    let store: UseBoundStore<StoreApi<StoreState<T>>>;
 
     if (storage !== 'none') {
       // Create store with persistence
       const storageImpl = storage === 'localStorage' ? localStorage : sessionStorage;
 
-      store = create<StoreState>()(
+      store = create<StoreState<T>>()(
         persist(stateCreator, {
           name: `${storageKey}-${key}`,
           storage: createJSONStorage(() => storageImpl),
@@ -123,34 +133,30 @@ export function useGlobalState<T>(
       );
     } else {
       // Create store without persistence
-      store = create<StoreState>(stateCreator);
+      store = create<StoreState<T>>(stateCreator);
     }
 
     globalStates.set(key, store as UseBoundStore<StoreApi<unknown>>);
   }
 
-  const store = globalStates.get(key) as UseBoundStore<
-    StoreApi<{ value: T; setValue: (value: unknown) => void; reset: () => void }>
-  >;
+  const store = globalStates.get(key) as UseBoundStore<StoreApi<StoreState<T>>>;
 
   // Performance optimization: use selector to only subscribe to value
   const value = store((state) => state.value);
 
   // Memoize actions to prevent unnecessary re-renders
   // Use store's internal methods directly for better stability
-  const setValue = useMemo(() => {
-    return (value: unknown) => store.getState().setValue(value);
-  }, [store]);
+  const setValue = useMemo(
+    () => (value: SetterValue<T>) => store.getState().setValue(value),
+    [store]
+  );
 
-  const reset = useMemo(() => {
-    return () => store.getState().reset();
-  }, [store]);
+  const reset = useMemo(
+    () => () => store.getState().reset(),
+    [store]
+  );
 
-  return [value, setValue, reset] as [
-    T,
-    (value: T extends Record<string, unknown> ? Partial<T> | ((prev: T) => T) : T | ((prev: T) => T)) => void,
-    () => void
-  ];
+  return [value, setValue, reset];
 }
 
 /**
@@ -166,18 +172,46 @@ export function useGlobalState<T>(
  *   'user',
  *   (state) => ({ name: state.name, email: state.email })
  * );
+ *
+ * // With custom equality function (shallow comparison)
+ * const user = useGlobalSelector(
+ *   'user',
+ *   (state) => ({ name: state.name, email: state.email }),
+ *   (a, b) => a.name === b.name && a.email === b.email
+ * );
  */
 export function useGlobalSelector<T, R>(
   key: string,
-  selector: (state: T) => R
+  selector: (state: T) => R,
+  equalityFn: (a: R, b: R) => boolean = Object.is
 ): R {
-  const store = globalStates.get(key) as UseBoundStore<StoreApi<{ value: T }>>;
+  const store = globalStates.get(key) as UseBoundStore<StoreApi<StoreState<T>>>;
 
   if (!store) {
     throw new Error(`Global state with key "${key}" not found. Initialize it with useGlobalState first.`);
   }
 
-  return store((state) => selector(state.value));
+  // If no custom equality function, use zustand's default behavior
+  if (equalityFn === Object.is) {
+    return store((state) => selector(state.value));
+  }
+
+  // For custom equality function, use useSyncExternalStore
+  const subscribe = useMemo(
+    () => (callback: () => void) => store.subscribe(callback),
+    [store]
+  );
+
+  const getSnapshot = useMemo(
+    () => () => selector(store.getState().value),
+    [store, selector]
+  );
+
+  return useSyncExternalStore(
+    subscribe,
+    getSnapshot,
+    getSnapshot
+  );
 }
 
 /**
@@ -189,10 +223,8 @@ export function useGlobalSelector<T, R>(
  * setCount(5);
  * setCount(prev => prev + 1);
  */
-export function useGlobalSetter<T>(
-  key: string
-): (value: T extends Record<string, unknown> ? Partial<T> | ((prev: T) => T) : T | ((prev: T) => T)) => void {
-  const store = globalStates.get(key) as UseBoundStore<StoreApi<{ value: T; setValue: (value: unknown) => void }>>;
+export function useGlobalSetter<T>(key: string): (value: SetterValue<T>) => void {
+  const store = globalStates.get(key) as UseBoundStore<StoreApi<StoreState<T>>>;
 
   if (!store) {
     throw new Error(`Global state with key "${key}" not found. Initialize it with useGlobalState first.`);
@@ -200,9 +232,10 @@ export function useGlobalSetter<T>(
 
   // Return memoized setter function to prevent re-renders
   // Use closure to ensure we always get the latest setValue method
-  return useMemo(() => {
-    return (value: unknown) => store.getState().setValue(value);
-  }, [store]);
+  return useMemo(
+    () => (value: SetterValue<T>) => store.getState().setValue(value),
+    [store]
+  );
 }
 
 /**
@@ -211,7 +244,7 @@ export function useGlobalSetter<T>(
  * const count = getGlobalState<number>('counter');
  */
 export function getGlobalState<T>(key: string): T | undefined {
-  const store = globalStates.get(key) as UseBoundStore<StoreApi<{ value: T }>>;
+  const store = globalStates.get(key) as UseBoundStore<StoreApi<StoreState<T>>>;
   return store?.getState().value;
 }
 
@@ -222,13 +255,8 @@ export function getGlobalState<T>(key: string): T | undefined {
  * setGlobalState('counter', prev => prev + 1);
  * setGlobalState('user', { name: 'Jane' }); // Partial update for objects
  */
-export function setGlobalState<T>(
-  key: string,
-  value: T extends Record<string, unknown> ? Partial<T> | ((prev: T) => T) : T | ((prev: T) => T)
-): void {
-  const store = globalStates.get(key) as UseBoundStore<
-    StoreApi<{ value: T; setValue: (value: unknown) => void }>
-  >;
+export function setGlobalState<T>(key: string, value: SetterValue<T>): void {
+  const store = globalStates.get(key) as UseBoundStore<StoreApi<StoreState<T>>>;
 
   if (!store) {
     if (process.env.NODE_ENV !== 'production') {
@@ -254,7 +282,7 @@ export function subscribeGlobalState<T>(
   key: string,
   callback: (newValue: T, prevValue: T) => void
 ): () => void {
-  const store = globalStates.get(key) as UseBoundStore<StoreApi<{ value: T }>>;
+  const store = globalStates.get(key) as UseBoundStore<StoreApi<StoreState<T>>>;
 
   if (!store) {
     if (process.env.NODE_ENV !== 'production') {
@@ -285,7 +313,7 @@ export function subscribeGlobalState<T>(
  * resetGlobalState('counter');
  */
 export function resetGlobalState(key: string): void {
-  const store = globalStates.get(key) as UseBoundStore<StoreApi<{ reset: () => void }>>;
+  const store = globalStates.get(key) as UseBoundStore<StoreApi<Pick<StoreState<unknown>, 'reset'>>>;
 
   if (!store) {
     if (process.env.NODE_ENV !== 'production') {
