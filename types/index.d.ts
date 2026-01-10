@@ -12,6 +12,10 @@ export declare function __clearAllStates__(): void;
  */
 export type StorageType = 'localStorage' | 'sessionStorage' | 'none';
 /**
+ * Helper type for setter value - supports partial updates for objects
+ */
+type SetterValue<T> = T extends Record<string, unknown> ? Partial<T> | ((prev: T) => T) : T | ((prev: T) => T);
+/**
  * Options for useGlobalState
  */
 export interface UseGlobalStateOptions {
@@ -61,11 +65,7 @@ export interface UseGlobalStateOptions {
  *
  * // For non-React usage, see: getGlobalState, setGlobalState, subscribeGlobalState, resetGlobalState
  */
-export declare function useGlobalState<T>(key: string, initialState: T, options?: UseGlobalStateOptions): [
-    T,
-    (value: T extends Record<string, unknown> ? Partial<T> | ((prev: T) => T) : T | ((prev: T) => T)) => void,
-    () => void
-];
+export declare function useGlobalState<T>(key: string, initialState: T, options?: UseGlobalStateOptions): [T, (value: SetterValue<T>) => void, () => void];
 /**
  * Advanced hook with custom selector for fine-grained subscriptions
  * Only re-renders when selected value changes
@@ -79,8 +79,15 @@ export declare function useGlobalState<T>(key: string, initialState: T, options?
  *   'user',
  *   (state) => ({ name: state.name, email: state.email })
  * );
+ *
+ * // With custom equality function (shallow comparison)
+ * const user = useGlobalSelector(
+ *   'user',
+ *   (state) => ({ name: state.name, email: state.email }),
+ *   (a, b) => a.name === b.name && a.email === b.email
+ * );
  */
-export declare function useGlobalSelector<T, R>(key: string, selector: (state: T) => R): R;
+export declare function useGlobalSelector<T, R>(key: string, selector: (state: T) => R, equalityFn?: (a: R, b: R) => boolean): R;
 /**
  * Hook to get setter function only (doesn't subscribe to state changes)
  * Useful when you only need to update state without reading it
@@ -90,7 +97,7 @@ export declare function useGlobalSelector<T, R>(key: string, selector: (state: T
  * setCount(5);
  * setCount(prev => prev + 1);
  */
-export declare function useGlobalSetter<T>(key: string): (value: T extends Record<string, unknown> ? Partial<T> | ((prev: T) => T) : T | ((prev: T) => T)) => void;
+export declare function useGlobalSetter<T>(key: string): (value: SetterValue<T>) => void;
 /**
  * Get global state value (for non-React usage)
  * @example
@@ -104,7 +111,7 @@ export declare function getGlobalState<T>(key: string): T | undefined;
  * setGlobalState('counter', prev => prev + 1);
  * setGlobalState('user', { name: 'Jane' }); // Partial update for objects
  */
-export declare function setGlobalState<T>(key: string, value: T extends Record<string, unknown> ? Partial<T> | ((prev: T) => T) : T | ((prev: T) => T)): void;
+export declare function setGlobalState<T>(key: string, value: SetterValue<T>): void;
 /**
  * Subscribe to global state changes (for non-React usage)
  * Returns unsubscribe function
