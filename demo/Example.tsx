@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, Button, Space, Input, Typography, Divider, Badge } from 'antd';
+import { Card, Button, Space, Input, Typography, Divider, Badge, Collapse } from 'antd';
 import {
   useGlobalState,
   useGlobalSelector,
@@ -668,10 +668,7 @@ const UserSelectorWithEqualityFn: React.FC = () => {
   );
 
   return (
-    <Card
-      title="Component D - Shallow Comparison (useShallow)"
-      className="use-global-state-example__card"
-    >
+    <Card title="Component D" className="use-global-state-example__card">
       <Space direction="vertical" style={{ width: '100%' }}>
         <Badge
           count={renderCountEqualityFn}
@@ -699,34 +696,6 @@ const UserSelectorWithEqualityFn: React.FC = () => {
           <br />
           Only re-renders when name or email changes.
         </Text>
-        <Divider />
-        <Text type="secondary" style={{ fontSize: 12 }}>
-          📝 Code:
-        </Text>
-        <pre
-          style={{
-            background: '#f5f5f5',
-            padding: 8,
-            borderRadius: 4,
-            fontSize: 11,
-          }}
-        >
-          {`// Default: Object.is comparison
-const userName = useGlobalSelector(
-  'user',
-  (state) => state.name
-);
-
-// Shallow comparison for objects/arrays
-const userInfo = useGlobalSelector(
-  'user',
-  (state) => ({
-    name: state.name,
-    email: state.email
-  }),
-  'shallow' // Built-in shallow comparison
-);`}
-        </pre>
       </Space>
     </Card>
   );
@@ -854,6 +823,36 @@ const Example: React.FC = () => {
         <CounterComponentB />
         {showOptimized && <CounterButtons />}
       </div>
+      <Collapse
+        items={[{
+          key: '1',
+          label: '查看代码示例',
+          children: (
+            <pre
+              style={{
+                background: '#f5f5f5',
+                padding: 16,
+                borderRadius: 4,
+                fontSize: 12,
+                margin: 0,
+                overflow: 'auto',
+              }}
+            >
+              {`const [count, setCount, resetCount] = useGlobalState('counter', 0);
+
+// 直接赋值
+setCount(5);
+
+// 函数式更新
+setCount(prev => prev + 1);
+
+// 重置到初始值
+resetCount();`}
+            </pre>
+          )
+        }]}
+        style={{ marginTop: 16 }}
+      />
 
       <Divider style={{ margin: '32px 0' }} />
 
@@ -868,32 +867,53 @@ const Example: React.FC = () => {
         <UserComponentA />
         <UserComponentB />
       </div>
+      <Collapse
+        items={[{
+          key: '1',
+          label: '查看代码示例',
+          children: (
+            <pre
+              style={{
+                background: '#f5f5f5',
+                padding: 16,
+                borderRadius: 4,
+                fontSize: 12,
+                margin: 0,
+                overflow: 'auto',
+              }}
+            >
+              {`const [user, setUser, resetUser] = useGlobalState('user', {
+  name: 'John',
+  email: 'john@example.com',
+  age: 30
+});
+
+// 部分更新 - 只更新 name 字段
+setUser({ name: 'Jane' });
+
+// 函数式更新
+setUser(prev => ({ ...prev, age: prev.age + 1 }));
+
+// 重置到初始值
+resetUser();`}
+            </pre>
+          )
+        }]}
+        style={{ marginTop: 16 }}
+      />
 
       <Divider style={{ margin: '32px 0' }} />
 
-      <Title level={3}>3. Performance Optimization</Title>
+      <Title level={3}>3. Performance Optimization (auto detection)</Title>
       <Paragraph>
         <Text strong>优化重渲染：</Text>使用 <Text code>useGlobalSelector</Text>{' '}
         和 <Text code>useGlobalSetter</Text>{' '}
         减少不必要的组件重渲染，支持浅比较优化
       </Paragraph>
       <Space style={{ marginBottom: 16 }}>
-        <Button
-          type="primary"
-          onClick={() => {
-            renderCountSelector = 0;
-            renderCountSetter = 0;
-            renderCountEqualityFn = 0;
-            setShowOptimized(!showOptimized);
-          }}
-        >
-          {showOptimized ? 'Hide' : 'Show'} Optimized Components
-        </Button>
-        {showOptimized && (
-          <Text type="secondary">
-            观察 Render Count - 优化组件不会因为无关状态变化而重渲染
-          </Text>
-        )}
+        <Text type="secondary">
+          观察 Render Count - 优化组件不会因为无关状态变化而重渲染
+        </Text>
       </Space>
       {showOptimized && (
         <div className="use-global-state-example__row">
@@ -901,6 +921,43 @@ const Example: React.FC = () => {
           <CounterButtons />
           <UserSelectorWithEqualityFn />
         </div>
+      )}
+      {showOptimized && (
+        <Collapse
+          items={[{
+            key: '1',
+            label: '查看代码示例',
+            children: (
+              <pre
+                style={{
+                  background: '#f5f5f5',
+                  padding: 16,
+                  borderRadius: 4,
+                  fontSize: 12,
+                  margin: 0,
+                  overflow: 'auto',
+                }}
+              >
+                {`// useGlobalSelector - 细粒度订阅
+const userName = useGlobalSelector('user', state => state.name);
+// 只有 name 变化时才重渲染
+
+// 自动浅比较 - 对象返回值
+const userInfo = useGlobalSelector('user', state => ({
+  name: state.name,
+  email: state.email
+}));
+// 自动检测对象类型并使用浅比较
+
+// useGlobalSetter - 只写模式
+const setCount = useGlobalSetter<number>('counter');
+setCount(prev => prev + 1);
+// 此组件不会因为 count 变化而重渲染`}
+              </pre>
+            )
+          }]}
+          style={{ marginTop: 16 }}
+        />
       )}
 
       <Divider style={{ margin: '32px 0' }} />
@@ -913,6 +970,40 @@ const Example: React.FC = () => {
       <div className="use-global-state-example__row">
         <DevToolsExample />
       </div>
+      <Collapse
+        items={[{
+          key: '1',
+          label: '查看代码示例',
+          children: (
+            <pre
+              style={{
+                background: '#f5f5f5',
+                padding: 16,
+                borderRadius: 4,
+                fontSize: 12,
+                margin: 0,
+                overflow: 'auto',
+              }}
+            >
+              {`// 开发环境自动启用 DevTools（默认）
+const [data, setData] = useGlobalState('data', { count: 0 });
+
+// 禁用 DevTools
+const [privateData, setPrivateData] = useGlobalState('private', {}, {
+  enableDevtools: false
+});
+
+// 强制启用 DevTools（生产环境）
+const [debugData, setDebugData] = useGlobalState('debug', {}, {
+  enableDevtools: true
+});
+
+// 在 Redux DevTools 中显示为: GlobalState:data`}
+            </pre>
+          )
+        }]}
+        style={{ marginTop: 16 }}
+      />
 
       <Divider style={{ margin: '32px 0' }} />
 
@@ -927,6 +1018,41 @@ const Example: React.FC = () => {
         <PersistentSettings />
         <SessionData />
       </div>
+      <Collapse
+        items={[{
+          key: '1',
+          label: '查看代码示例',
+          children: (
+            <pre
+              style={{
+                background: '#f5f5f5',
+                padding: 16,
+                borderRadius: 4,
+                fontSize: 12,
+                margin: 0,
+                overflow: 'auto',
+              }}
+            >
+              {`// localStorage - 持久化存储
+const [settings, setSettings] = useGlobalState(
+  'settings',
+  { theme: 'dark', lang: 'en' },
+  { storage: 'localStorage', storageKey: 'my-app' }
+);
+
+// sessionStorage - 会话存储
+const [tempData, setTempData] = useGlobalState(
+  'temp',
+  { count: 0 },
+  { storage: 'sessionStorage' }
+);
+
+// 状态会自动保存到 storage，刷新页面后自动恢复`}
+            </pre>
+          )
+        }]}
+        style={{ marginTop: 16 }}
+      />
 
       <Divider style={{ margin: '32px 0' }} />
 
@@ -938,6 +1064,44 @@ const Example: React.FC = () => {
         <ProductList />
         <ShoppingCart />
       </div>
+      <Collapse
+        items={[{
+          key: '1',
+          label: '查看代码示例',
+          children: (
+            <pre
+              style={{
+                background: '#f5f5f5',
+                padding: 16,
+                borderRadius: 4,
+                fontSize: 12,
+                margin: 0,
+                overflow: 'auto',
+              }}
+            >
+              {`const [cart, setCart] = useGlobalState<CartItem[]>('cart', []);
+
+// 添加商品到购物车
+const addToCart = (product: Product) => {
+  setCart(prev => {
+    const existing = prev.find(item => item.id === product.id);
+    if (existing) {
+      return prev.map(item =>
+        item.id === product.id
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      );
+    }
+    return [...prev, { ...product, quantity: 1 }];
+  });
+};
+
+// 多个组件共享购物车状态`}
+            </pre>
+          )
+        }]}
+        style={{ marginTop: 16 }}
+      />
 
       <Divider style={{ margin: '32px 0' }} />
 
