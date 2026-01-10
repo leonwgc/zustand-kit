@@ -1,8 +1,4 @@
 /**
- * @file src/index.tsx
- * @author leon.wang
- */
-/**
  * Clear all global states (for testing purposes)
  * @internal
  */
@@ -37,11 +33,11 @@ export interface UseGlobalStateOptions {
 }
 /**
  * Universal global state hook - supports both simple values and objects
- * Performance optimized with selector pattern
+ * Performance optimized with selector pattern and automatic Redux DevTools integration
  *
  * @param key - Unique key for the state
  * @param initialState - Initial state (any type)
- * @param options - Configuration options including persistence
+ * @param options - Configuration options including persistence and devtools
  * @returns [state, setState, resetState]
  *
  * @example
@@ -54,18 +50,30 @@ export interface UseGlobalStateOptions {
  * const [user, setUser, resetUser] = useGlobalState('user', {
  *   name: 'John',
  *   email: 'john@example.com',
+ *   age: 30
  * });
- * setUser({ name: 'Jane' }); // Partial update
+ * setUser({ name: 'Jane' }); // Partial update - only updates name field
+ * setUser(prev => ({ ...prev, age: prev.age + 1 })); // Functional update
  *
- * // With localStorage persistence
+ * // With localStorage persistence (DevTools enabled by default in development)
  * const [settings, setSettings] = useGlobalState('settings', { theme: 'dark' }, {
  *   storage: 'localStorage'
  * });
  *
- * // With sessionStorage persistence
+ * // With sessionStorage persistence and custom storage key
  * const [tempData, setTempData] = useGlobalState('temp', { foo: 'bar' }, {
  *   storage: 'sessionStorage',
  *   storageKey: 'my-app'
+ * });
+ *
+ * // Disable DevTools in development
+ * const [privateData, setPrivateData] = useGlobalState('private', {}, {
+ *   enableDevtools: false
+ * });
+ *
+ * // Force enable DevTools in production (not recommended)
+ * const [debugData, setDebugData] = useGlobalState('debug', {}, {
+ *   enableDevtools: true
  * });
  *
  * // For non-React usage, see: getGlobalState, setGlobalState, subscribeGlobalState, resetGlobalState
@@ -74,25 +82,40 @@ export declare function useGlobalState<T>(key: string, initialState: T, options?
 /**
  * Advanced hook with custom selector for fine-grained subscriptions
  * Only re-renders when selected value changes
+ * Automatically detects return type and uses appropriate comparison mode
+ *
+ * @param key - Global state key
+ * @param selector - Function to select part of the state
+ * @param equalityMode - Optional comparison mode:
+ *   - undefined (default): Auto-detect based on return type (shallow for objects/arrays, Object.is for primitives)
+ *   - 'shallow': Force shallow comparison
+ *   - false: Force Object.is comparison
  *
  * @example
- * // Only subscribe to user name, not the whole user object
+ * // Auto mode: uses Object.is for primitive
  * const userName = useGlobalSelector('user', (state) => state.name);
  *
- * // Multiple values
- * const { name, email } = useGlobalSelector(
+ * // Auto mode: uses shallow for object
+ * const userInfo = useGlobalSelector(
  *   'user',
  *   (state) => ({ name: state.name, email: state.email })
  * );
  *
- * // With custom equality function (shallow comparison)
- * const user = useGlobalSelector(
+ * // Force shallow comparison
+ * const userInfo = useGlobalSelector(
  *   'user',
  *   (state) => ({ name: state.name, email: state.email }),
- *   (a, b) => a.name === b.name && a.email === b.email
+ *   'shallow'
+ * );
+ *
+ * // Force Object.is comparison (even for objects)
+ * const userInfo = useGlobalSelector(
+ *   'user',
+ *   (state) => ({ name: state.name, email: state.email }),
+ *   false
  * );
  */
-export declare function useGlobalSelector<T, R>(key: string, selector: (state: T) => R, equalityFn?: (a: R, b: R) => boolean): R;
+export declare function useGlobalSelector<T, R>(key: string, selector: (state: T) => R, equalityMode?: 'shallow' | false): R;
 /**
  * Hook to get setter function only (doesn't subscribe to state changes)
  * Useful when you only need to update state without reading it

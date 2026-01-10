@@ -2,12 +2,11 @@
  * @file src/index.tsx
  * @author leon.wang
  */
-
+import * as React from 'react';
 import { create, StoreApi, UseBoundStore, StateCreator } from 'zustand';
 import { persist, createJSONStorage, devtools } from 'zustand/middleware';
 import { useMemo, useRef, useCallback, useEffect } from 'react';
 import { useShallow } from 'zustand/react/shallow';
-import * as React from 'react';
 
 /**
  * Global state storage
@@ -120,11 +119,14 @@ export function useGlobalState<T>(
     storage = 'none',
     storageKey = 'global-state',
     // Auto-enable Redux DevTools in development for better debugging experience
-    enableDevtools = process.env.NODE_ENV !== 'production'
+    enableDevtools = process.env.NODE_ENV !== 'production',
   } = options || {};
 
   if (!globalStates.has(key)) {
-    const isObject = typeof initialState === 'object' && initialState !== null && !Array.isArray(initialState);
+    const isObject =
+      typeof initialState === 'object' &&
+      initialState !== null &&
+      !Array.isArray(initialState);
 
     const stateCreator: StateCreator<StoreState<T>, [], []> = (set) => ({
       value: initialState,
@@ -149,7 +151,8 @@ export function useGlobalState<T>(
     // Middleware order: devtools(persist(...)) ensures all state changes are tracked
     if (storage !== 'none' && enableDevtools) {
       // Both persistence and devtools - best for production-ready features
-      const storageImpl = storage === 'localStorage' ? localStorage : sessionStorage;
+      const storageImpl =
+        storage === 'localStorage' ? localStorage : sessionStorage;
 
       store = create<StoreState<T>>()(
         devtools(
@@ -162,7 +165,8 @@ export function useGlobalState<T>(
       );
     } else if (storage !== 'none') {
       // Only persistence - production mode without debugging
-      const storageImpl = storage === 'localStorage' ? localStorage : sessionStorage;
+      const storageImpl =
+        storage === 'localStorage' ? localStorage : sessionStorage;
 
       store = create<StoreState<T>>()(
         persist(stateCreator, {
@@ -172,7 +176,9 @@ export function useGlobalState<T>(
       );
     } else if (enableDevtools) {
       // Only devtools - development mode for debugging
-      store = create<StoreState<T>>()(devtools(stateCreator, { name: `GlobalState:${key}` }));
+      store = create<StoreState<T>>()(
+        devtools(stateCreator, { name: `GlobalState:${key}` })
+      );
     } else {
       // No middleware - minimal overhead
       store = create<StoreState<T>>(stateCreator);
@@ -193,10 +199,7 @@ export function useGlobalState<T>(
     [store]
   );
 
-  const reset = useMemo(
-    () => () => store.getState().reset(),
-    [store]
-  );
+  const reset = useMemo(() => () => store.getState().reset(), [store]);
 
   return [value, setValue, reset];
 }
@@ -211,6 +214,7 @@ export function useGlobalState<T>(
  * @param equalityMode - Optional comparison mode:
  *   - undefined (default): Auto-detect based on return type (shallow for objects/arrays, Object.is for primitives)
  *   - 'shallow': Force shallow comparison
+ *   - false: Force Object.is comparison
  *
  * @example
  * // Auto mode: uses Object.is for primitive
@@ -228,16 +232,25 @@ export function useGlobalState<T>(
  *   (state) => ({ name: state.name, email: state.email }),
  *   'shallow'
  * );
+ *
+ * // Force Object.is comparison (even for objects)
+ * const userInfo = useGlobalSelector(
+ *   'user',
+ *   (state) => ({ name: state.name, email: state.email }),
+ *   false
+ * );
  */
 export function useGlobalSelector<T, R>(
   key: string,
   selector: (state: T) => R,
-  equalityMode?: 'shallow'
+  equalityMode?: 'shallow' | false
 ): R {
   const store = globalStates.get(key) as UseBoundStore<StoreApi<StoreState<T>>>;
 
   if (!store) {
-    throw new Error(`Global state with key "${key}" not found. Initialize it with useGlobalState first.`);
+    throw new Error(
+      `Global state with key "${key}" not found. Initialize it with useGlobalState first.`
+    );
   }
 
   // Memoize selector to avoid recreation
@@ -273,7 +286,7 @@ export function useGlobalSelector<T, R>(
     return store(useShallow(wrappedSelector)) as R;
   }
 
-  // Default: use zustand's default Object.is comparison
+  // Force Object.is comparison (equalityMode === false)
   return store(wrappedSelector);
 }
 
@@ -286,11 +299,15 @@ export function useGlobalSelector<T, R>(
  * setCount(5);
  * setCount(prev => prev + 1);
  */
-export function useGlobalSetter<T>(key: string): (value: SetterValue<T>) => void {
+export function useGlobalSetter<T>(
+  key: string
+): (value: SetterValue<T>) => void {
   const store = globalStates.get(key) as UseBoundStore<StoreApi<StoreState<T>>>;
 
   if (!store) {
-    throw new Error(`Global state with key "${key}" not found. Initialize it with useGlobalState first.`);
+    throw new Error(
+      `Global state with key "${key}" not found. Initialize it with useGlobalState first.`
+    );
   }
 
   // Return memoized setter function to prevent re-renders
@@ -324,7 +341,9 @@ export function setGlobalState<T>(key: string, value: SetterValue<T>): void {
   if (!store) {
     if (process.env.NODE_ENV !== 'production') {
       // eslint-disable-next-line no-console
-      console.warn(`Global state with key "${key}" not found. Initialize it with useGlobalState first.`);
+      console.warn(
+        `Global state with key "${key}" not found. Initialize it with useGlobalState first.`
+      );
     }
     return;
   }
@@ -350,7 +369,9 @@ export function subscribeGlobalState<T>(
   if (!store) {
     if (process.env.NODE_ENV !== 'production') {
       // eslint-disable-next-line no-console
-      console.warn(`Global state with key "${key}" not found. Initialize it with useGlobalState first.`);
+      console.warn(
+        `Global state with key "${key}" not found. Initialize it with useGlobalState first.`
+      );
     }
     // Return no-op unsubscribe function
     // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -376,12 +397,16 @@ export function subscribeGlobalState<T>(
  * resetGlobalState('counter');
  */
 export function resetGlobalState(key: string): void {
-  const store = globalStates.get(key) as UseBoundStore<StoreApi<Pick<StoreState<unknown>, 'reset'>>>;
+  const store = globalStates.get(key) as UseBoundStore<
+    StoreApi<Pick<StoreState<unknown>, 'reset'>>
+  >;
 
   if (!store) {
     if (process.env.NODE_ENV !== 'production') {
       // eslint-disable-next-line no-console
-      console.warn(`Global state with key "${key}" not found. Initialize it with useGlobalState first.`);
+      console.warn(
+        `Global state with key "${key}" not found. Initialize it with useGlobalState first.`
+      );
     }
     return;
   }
