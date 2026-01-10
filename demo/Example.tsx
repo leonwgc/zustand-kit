@@ -904,7 +904,7 @@ resetUser();`}
 
       <Divider style={{ margin: '32px 0' }} />
 
-      <Title level={3}>3. Performance Optimization (auto detection)</Title>
+      <Title level={3}>3. Performance Optimization</Title>
       <Paragraph>
         <Text strong>优化重渲染：</Text>使用 <Text code>useGlobalSelector</Text>{' '}
         和 <Text code>useGlobalSetter</Text>{' '}
