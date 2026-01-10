@@ -137,8 +137,14 @@ export function useGlobalState<T>(
   const value = store((state) => state.value);
 
   // Memoize actions to prevent unnecessary re-renders
-  const setValue = useMemo(() => store.getState().setValue, [store]);
-  const reset = useMemo(() => store.getState().reset, [store]);
+  // Use store's internal methods directly for better stability
+  const setValue = useMemo(() => {
+    return (value: unknown) => store.getState().setValue(value);
+  }, [store]);
+
+  const reset = useMemo(() => {
+    return () => store.getState().reset();
+  }, [store]);
 
   return [value, setValue, reset] as [
     T,
@@ -193,7 +199,10 @@ export function useGlobalSetter<T>(
   }
 
   // Return memoized setter function to prevent re-renders
-  return useMemo(() => store.getState().setValue, [store]);
+  // Use closure to ensure we always get the latest setValue method
+  return useMemo(() => {
+    return (value: unknown) => store.getState().setValue(value);
+  }, [store]);
 }
 
 /**
@@ -259,9 +268,11 @@ export function subscribeGlobalState<T>(
 
   let prevValue = store.getState().value;
 
+  // Use zustand's subscribe with selector for better performance
   return store.subscribe((state) => {
     const newValue = state.value;
-    if (newValue !== prevValue) {
+    // Use Object.is for better comparison (handles NaN, -0, +0)
+    if (!Object.is(newValue, prevValue)) {
       callback(newValue, prevValue);
       prevValue = newValue;
     }
