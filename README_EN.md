@@ -148,12 +148,12 @@ function UserEmail() {
   return <p>Email: {userEmail}</p>;
 }
 
-// Use custom equality function to optimize object selectors
+// Use shallow comparison to optimize object/array selectors
 function UserInfo() {
   const userInfo = useGlobalSelector(
     'user',
     (state) => ({ name: state.name, email: state.email }),
-    (a, b) => a.name === b.name && a.email === b.email // Shallow comparison
+    'shallow' // Built-in shallow comparison
   );
 
   return (
@@ -228,13 +228,16 @@ Create or connect to a global state.
 
 **Returns:** `[state, setState, resetState]`
 
-### `useGlobalSelector<T, R>(key, selector)`
+### `useGlobalSelector<T, R>(key, selector, equalityMode?)`
 
 Subscribe to a specific part of the state using a selector.
 
 **Parameters:**
 - `key: string` - State key
 - `selector: (state: T) => R` - Selector function
+- `equalityMode?: 'shallow'` - Optional comparison mode
+  - Default: Uses `Object.is` comparison (suitable for primitive types and single fields)
+  - `'shallow'`: Uses shallow comparison (suitable for objects/arrays)
 
 **Returns:** Selected value
 

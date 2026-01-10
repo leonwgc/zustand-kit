@@ -148,12 +148,12 @@ function UserEmail() {
   return <p>邮箱: {userEmail}</p>;
 }
 
-// 使用自定义相等性函数优化对象选择器
+// 使用浅比较优化对象/数组选择器
 function UserInfo() {
   const userInfo = useGlobalSelector(
     'user',
     (state) => ({ name: state.name, email: state.email }),
-    (a, b) => a.name === b.name && a.email === b.email // 浅比较
+    'shallow' // 使用内置浅比较
   );
 
   return (
@@ -228,13 +228,16 @@ resetGlobalState('counter');
 
 **返回：** `[state, setState, resetState]`
 
-### `useGlobalSelector<T, R>(key, selector)`
+### `useGlobalSelector<T, R>(key, selector, equalityMode?)`
 
 使用选择器订阅状态的特定部分。
 
 **参数：**
 - `key: string` - 状态键
 - `selector: (state: T) => R` - 选择器函数
+- `equalityMode?: 'shallow'` - 可选的比较模式
+  - 默认：使用 `Object.is` 比较（适合基本类型和单一字段）
+  - `'shallow'`：使用浅比较（适合对象/数组）
 
 **返回：** 选择的值
 
