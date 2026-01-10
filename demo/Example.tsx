@@ -4,7 +4,16 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, Button, Space, Input, Typography, Divider, Badge, Collapse } from 'antd';
+import {
+  Card,
+  Button,
+  Space,
+  Input,
+  Typography,
+  Divider,
+  Badge,
+  Collapse,
+} from 'antd';
 import {
   useGlobalState,
   useGlobalSelector,
@@ -657,14 +666,13 @@ const NonReactStateDisplay: React.FC = () => {
 let renderCountEqualityFn = 0;
 const UserSelectorWithEqualityFn: React.FC = () => {
   renderCountEqualityFn++;
-  // Use shallow comparison mode - only re-render if name or email changes
+  
   const userInfo = useGlobalSelector(
     'user',
     (state: { name: string; email: string; age: number }) => ({
       name: state.name,
       email: state.email,
-    }),
-    'shallow' // Use built-in shallow comparison
+    })
   );
 
   return (
@@ -824,21 +832,22 @@ const Example: React.FC = () => {
         {showOptimized && <CounterButtons />}
       </div>
       <Collapse
-        items={[{
-          key: '1',
-          label: '查看代码示例',
-          children: (
-            <pre
-              style={{
-                background: '#f5f5f5',
-                padding: 16,
-                borderRadius: 4,
-                fontSize: 12,
-                margin: 0,
-                overflow: 'auto',
-              }}
-            >
-              {`const [count, setCount, resetCount] = useGlobalState('counter', 0);
+        items={[
+          {
+            key: '1',
+            label: '查看代码示例',
+            children: (
+              <pre
+                style={{
+                  background: '#f5f5f5',
+                  padding: 16,
+                  borderRadius: 4,
+                  fontSize: 12,
+                  margin: 0,
+                  overflow: 'auto',
+                }}
+              >
+                {`const [count, setCount, resetCount] = useGlobalState('counter', 0);
 
 // 直接赋值
 setCount(5);
@@ -848,9 +857,10 @@ setCount(prev => prev + 1);
 
 // 重置到初始值
 resetCount();`}
-            </pre>
-          )
-        }]}
+              </pre>
+            ),
+          },
+        ]}
         style={{ marginTop: 16 }}
       />
 
@@ -868,21 +878,22 @@ resetCount();`}
         <UserComponentB />
       </div>
       <Collapse
-        items={[{
-          key: '1',
-          label: '查看代码示例',
-          children: (
-            <pre
-              style={{
-                background: '#f5f5f5',
-                padding: 16,
-                borderRadius: 4,
-                fontSize: 12,
-                margin: 0,
-                overflow: 'auto',
-              }}
-            >
-              {`const [user, setUser, resetUser] = useGlobalState('user', {
+        items={[
+          {
+            key: '1',
+            label: '查看代码示例',
+            children: (
+              <pre
+                style={{
+                  background: '#f5f5f5',
+                  padding: 16,
+                  borderRadius: 4,
+                  fontSize: 12,
+                  margin: 0,
+                  overflow: 'auto',
+                }}
+              >
+                {`const [user, setUser, resetUser] = useGlobalState('user', {
   name: 'John',
   email: 'john@example.com',
   age: 30
@@ -896,9 +907,10 @@ setUser(prev => ({ ...prev, age: prev.age + 1 }));
 
 // 重置到初始值
 resetUser();`}
-            </pre>
-          )
-        }]}
+              </pre>
+            ),
+          },
+        ]}
         style={{ marginTop: 16 }}
       />
 
@@ -924,21 +936,22 @@ resetUser();`}
       )}
       {showOptimized && (
         <Collapse
-          items={[{
-            key: '1',
-            label: '查看代码示例',
-            children: (
-              <pre
-                style={{
-                  background: '#f5f5f5',
-                  padding: 16,
-                  borderRadius: 4,
-                  fontSize: 12,
-                  margin: 0,
-                  overflow: 'auto',
-                }}
-              >
-                {`// useGlobalSelector - 细粒度订阅
+          items={[
+            {
+              key: '1',
+              label: '查看代码示例',
+              children: (
+                <pre
+                  style={{
+                    background: '#f5f5f5',
+                    padding: 16,
+                    borderRadius: 4,
+                    fontSize: 12,
+                    margin: 0,
+                    overflow: 'auto',
+                  }}
+                >
+                  {`// useGlobalSelector - 细粒度订阅
 const userName = useGlobalSelector('user', state => state.name);
 // 只有 name 变化时才重渲染
 
@@ -953,9 +966,10 @@ const userInfo = useGlobalSelector('user', state => ({
 const setCount = useGlobalSetter<number>('counter');
 setCount(prev => prev + 1);
 // 此组件不会因为 count 变化而重渲染`}
-              </pre>
-            )
-          }]}
+                </pre>
+              ),
+            },
+          ]}
           style={{ marginTop: 16 }}
         />
       )}
@@ -971,21 +985,22 @@ setCount(prev => prev + 1);
         <DevToolsExample />
       </div>
       <Collapse
-        items={[{
-          key: '1',
-          label: '查看代码示例',
-          children: (
-            <pre
-              style={{
-                background: '#f5f5f5',
-                padding: 16,
-                borderRadius: 4,
-                fontSize: 12,
-                margin: 0,
-                overflow: 'auto',
-              }}
-            >
-              {`// 开发环境自动启用 DevTools（默认）
+        items={[
+          {
+            key: '1',
+            label: '查看代码示例',
+            children: (
+              <pre
+                style={{
+                  background: '#f5f5f5',
+                  padding: 16,
+                  borderRadius: 4,
+                  fontSize: 12,
+                  margin: 0,
+                  overflow: 'auto',
+                }}
+              >
+                {`// 开发环境自动启用 DevTools（默认）
 const [data, setData] = useGlobalState('data', { count: 0 });
 
 // 禁用 DevTools
@@ -999,9 +1014,10 @@ const [debugData, setDebugData] = useGlobalState('debug', {}, {
 });
 
 // 在 Redux DevTools 中显示为: GlobalState:data`}
-            </pre>
-          )
-        }]}
+              </pre>
+            ),
+          },
+        ]}
         style={{ marginTop: 16 }}
       />
 
@@ -1019,21 +1035,22 @@ const [debugData, setDebugData] = useGlobalState('debug', {}, {
         <SessionData />
       </div>
       <Collapse
-        items={[{
-          key: '1',
-          label: '查看代码示例',
-          children: (
-            <pre
-              style={{
-                background: '#f5f5f5',
-                padding: 16,
-                borderRadius: 4,
-                fontSize: 12,
-                margin: 0,
-                overflow: 'auto',
-              }}
-            >
-              {`// localStorage - 持久化存储
+        items={[
+          {
+            key: '1',
+            label: '查看代码示例',
+            children: (
+              <pre
+                style={{
+                  background: '#f5f5f5',
+                  padding: 16,
+                  borderRadius: 4,
+                  fontSize: 12,
+                  margin: 0,
+                  overflow: 'auto',
+                }}
+              >
+                {`// localStorage - 持久化存储
 const [settings, setSettings] = useGlobalState(
   'settings',
   { theme: 'dark', lang: 'en' },
@@ -1048,9 +1065,10 @@ const [tempData, setTempData] = useGlobalState(
 );
 
 // 状态会自动保存到 storage，刷新页面后自动恢复`}
-            </pre>
-          )
-        }]}
+              </pre>
+            ),
+          },
+        ]}
         style={{ marginTop: 16 }}
       />
 
@@ -1065,21 +1083,22 @@ const [tempData, setTempData] = useGlobalState(
         <ShoppingCart />
       </div>
       <Collapse
-        items={[{
-          key: '1',
-          label: '查看代码示例',
-          children: (
-            <pre
-              style={{
-                background: '#f5f5f5',
-                padding: 16,
-                borderRadius: 4,
-                fontSize: 12,
-                margin: 0,
-                overflow: 'auto',
-              }}
-            >
-              {`const [cart, setCart] = useGlobalState<CartItem[]>('cart', []);
+        items={[
+          {
+            key: '1',
+            label: '查看代码示例',
+            children: (
+              <pre
+                style={{
+                  background: '#f5f5f5',
+                  padding: 16,
+                  borderRadius: 4,
+                  fontSize: 12,
+                  margin: 0,
+                  overflow: 'auto',
+                }}
+              >
+                {`const [cart, setCart] = useGlobalState<CartItem[]>('cart', []);
 
 // 添加商品到购物车
 const addToCart = (product: Product) => {
@@ -1097,9 +1116,10 @@ const addToCart = (product: Product) => {
 };
 
 // 多个组件共享购物车状态`}
-            </pre>
-          )
-        }]}
+              </pre>
+            ),
+          },
+        ]}
         style={{ marginTop: 16 }}
       />
 
