@@ -836,7 +836,7 @@ useGlobalState('key', initialState, {
 };
 
 const Example: React.FC = () => {
-  const [showOptimized, setShowOptimized] = useState(false);
+  const [showOptimized, setShowOptimized] = useState(true);
 
   return (
     <div className="use-global-state-example">
