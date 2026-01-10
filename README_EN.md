@@ -12,7 +12,7 @@ A lightweight and flexible state management library for React built on top of Zu
 - 🔍 **DevTools** - Automatic Redux DevTools integration in development
 - ⚡ **High Performance** - Built on Zustand, excellent performance
 - 🔄 **Flexible Updates** - Support partial object updates and functional updates
-- 🎨 **Selector Support** - Fine-grained subscriptions with custom equality functions
+- 🎨 **Smart Selectors** - Fine-grained subscriptions with auto-detected type optimization
 - 🌐 **Non-React Support** - Standalone APIs for non-component scenarios
 
 ## 📦 Installation
