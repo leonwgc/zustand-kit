@@ -241,4 +241,62 @@ describe('useGlobalSelector', () => {
     expect(nameResult.current).toBe('Jane');
     expect(emailResult.current).toBe('john@example.com');
   });
+
+  it('should auto-detect and use shallow comparison for object return type', () => {
+    const { result: stateResult } = renderHook(() => useGlobalState('user-6', initialUser));
+
+    let renderCount = 0;
+    const { result: selectorResult } = renderHook(() => {
+      renderCount++;
+      // No equalityMode specified - should auto-detect and use shallow
+      return useGlobalSelector<User, { name: string; email: string }>(
+        'user-6',
+        (state) => ({ name: state.name, email: state.email })
+      );
+    });
+
+    expect(selectorResult.current).toEqual({ name: 'John', email: 'john@example.com' });
+    expect(renderCount).toBe(1);
+
+    act(() => {
+      const [, setUser] = stateResult.current;
+      setUser({ age: 31 });
+    });
+
+    // Should not re-render because name and email haven't changed (auto shallow comparison)
+    expect(selectorResult.current).toEqual({ name: 'John', email: 'john@example.com' });
+    expect(renderCount).toBe(1);
+
+    act(() => {
+      const [, setUser] = stateResult.current;
+      setUser({ name: 'Jane' });
+    });
+
+    // Should re-render now
+    expect(selectorResult.current).toEqual({ name: 'Jane', email: 'john@example.com' });
+    expect(renderCount).toBe(2);
+  });
+
+  it('should auto-detect and use Object.is for primitive return type', () => {
+    const { result: stateResult } = renderHook(() => useGlobalState('user-7', initialUser));
+
+    let renderCount = 0;
+    const { result: selectorResult } = renderHook(() => {
+      renderCount++;
+      // No equalityMode specified - should auto-detect and use Object.is
+      return useGlobalSelector<User, string>('user-7', (state) => state.name);
+    });
+
+    expect(selectorResult.current).toBe('John');
+    expect(renderCount).toBe(1);
+
+    act(() => {
+      const [, setUser] = stateResult.current;
+      setUser({ age: 31 });
+    });
+
+    // Should not re-render because name hasn't changed
+    expect(selectorResult.current).toBe('John');
+    expect(renderCount).toBe(1);
+  });
 });

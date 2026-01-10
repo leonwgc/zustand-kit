@@ -7,6 +7,7 @@ import { create, StoreApi, UseBoundStore, StateCreator } from 'zustand';
 import { persist, createJSONStorage, devtools } from 'zustand/middleware';
 import { useMemo, useRef, useCallback, useEffect } from 'react';
 import { useShallow } from 'zustand/react/shallow';
+import * as React from 'react';
 
 /**
  * Global state storage
@@ -203,17 +204,25 @@ export function useGlobalState<T>(
 /**
  * Advanced hook with custom selector for fine-grained subscriptions
  * Only re-renders when selected value changes
- * Supports two comparison modes: Object.is (default) and shallow comparison
+ * Automatically detects return type and uses appropriate comparison mode
  *
  * @param key - Global state key
  * @param selector - Function to select part of the state
- * @param equalityMode - Optional 'shallow' for shallow comparison, defaults to Object.is
+ * @param equalityMode - Optional comparison mode:
+ *   - undefined (default): Auto-detect based on return type (shallow for objects/arrays, Object.is for primitives)
+ *   - 'shallow': Force shallow comparison
  *
  * @example
- * // Default: Object.is comparison - only subscribe to user name
+ * // Auto mode: uses Object.is for primitive
  * const userName = useGlobalSelector('user', (state) => state.name);
  *
- * // Shallow comparison - for objects/arrays
+ * // Auto mode: uses shallow for object
+ * const userInfo = useGlobalSelector(
+ *   'user',
+ *   (state) => ({ name: state.name, email: state.email })
+ * );
+ *
+ * // Force shallow comparison
  * const userInfo = useGlobalSelector(
  *   'user',
  *   (state) => ({ name: state.name, email: state.email }),
@@ -244,7 +253,22 @@ export function useGlobalSelector<T, R>(
     []
   );
 
-  // Use shallow comparison if requested
+  // Auto-detect comparison mode if not specified
+  if (equalityMode === undefined) {
+    // Get initial value to detect type
+    const initialValue = wrappedSelector(store.getState());
+    const shouldUseShallow =
+      initialValue !== null &&
+      typeof initialValue === 'object' &&
+      !React.isValidElement(initialValue);
+
+    if (shouldUseShallow) {
+      return store(useShallow(wrappedSelector)) as R;
+    }
+    return store(wrappedSelector);
+  }
+
+  // Force shallow comparison if explicitly requested
   if (equalityMode === 'shallow') {
     return store(useShallow(wrappedSelector)) as R;
   }

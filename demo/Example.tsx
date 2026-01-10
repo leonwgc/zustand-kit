@@ -176,7 +176,7 @@ const ProductList: React.FC = () => {
     { id: 4, name: 'Monitor', price: 299 },
   ];
 
-  const addToCart = (product: typeof products[0]) => {
+  const addToCart = (product: (typeof products)[0]) => {
     setCart({
       items: [...cart.items, product],
       total: cart.total + product.price,
@@ -874,7 +874,8 @@ const Example: React.FC = () => {
       <Title level={3}>3. Performance Optimization</Title>
       <Paragraph>
         <Text strong>优化重渲染：</Text>使用 <Text code>useGlobalSelector</Text>{' '}
-        和 <Text code>useGlobalSetter</Text> 减少不必要的组件重渲染，支持浅比较优化
+        和 <Text code>useGlobalSetter</Text>{' '}
+        减少不必要的组件重渲染，支持浅比较优化
       </Paragraph>
       <Space style={{ marginBottom: 16 }}>
         <Button
@@ -906,7 +907,8 @@ const Example: React.FC = () => {
 
       <Title level={3}>4. Redux DevTools Integration</Title>
       <Paragraph>
-        <Text strong>开发者工具：</Text>开发环境自动集成 Redux DevTools，支持时间旅行调试
+        <Text strong>开发者工具：</Text>开发环境自动集成 Redux
+        DevTools，支持时间旅行调试
       </Paragraph>
       <div className="use-global-state-example__row">
         <DevToolsExample />
@@ -948,218 +950,6 @@ const Example: React.FC = () => {
         <NonReactUsageExample />
         <NonReactStateDisplay />
       </div>
-
-      <Divider style={{ margin: '32px 0' }} />
-
-      <Card title="API Reference" className="use-global-state-example__card">
-        <Title level={5}>1. useGlobalState - 基础 Hook</Title>
-        <Paragraph>
-          <pre className="use-global-state-example__code">
-            {`import { useGlobalState } from 'zustand-kit';
-
-// 简单值类型 (number, string, boolean)
-const [count, setCount, resetCount] = useGlobalState('counter', 0);
-setCount(5);                    // 直接赋值
-setCount(prev => prev + 1);     // 函数式更新
-
-// 对象类型 - 支持部分更新
-const [user, setUser, resetUser] = useGlobalState('user', {
-  name: 'John',
-  email: 'john@example.com',
-  age: 25,
-});
-setUser({ name: 'Jane' });      // 部分更新（自动合并）
-setUser(prev => ({ ...prev, age: 26 })); // 函数式更新`}
-          </pre>
-        </Paragraph>
-
-        <Title level={5}>2. useGlobalSelector - 细粒度订阅（性能优化）</Title>
-        <Paragraph>
-          <pre className="use-global-state-example__code">
-            {`import { useGlobalSelector } from 'zustand-kit';
-
-// 只订阅特定字段，其他字段变化不会触发重渲染
-const userName = useGlobalSelector('user', state => state.name);
-
-// 订阅多个字段（使用内置浅比较）
-const userInfo = useGlobalSelector(
-  'user',
-  state => ({ name: state.name, email: state.email }),
-  'shallow' // 使用 useShallow 进行浅比较
-);
-
-// ⚡ 性能优势：
-// - 默认模式：使用 Object.is 比较（适合基本类型和单一字段）
-// - 'shallow' 模式：使用 useShallow 浅比较（适合对象/数组）`}
-          </pre>
-        </Paragraph>
-
-        <Title level={5}>3. useGlobalSetter - 只写模式（性能优化）</Title>
-        <Paragraph>
-          <pre className="use-global-state-example__code">
-            {`import { useGlobalSetter } from 'zustand-kit';
-
-// 只获取 setter，不订阅状态变化
-const setCount = useGlobalSetter<number>('counter');
-const setUser = useGlobalSetter<UserType>('user');
-
-setCount(5);
-setCount(prev => prev + 1);
-setUser({ name: 'Jane' });
-
-// ⚡ 性能优势：状态变化不会导致此组件重渲染
-// 适用于只需要更新状态的场景（如工具栏按钮）`}
-          </pre>
-        </Paragraph>
-        <Title level={5}>4. Persistence - localStorage / sessionStorage</Title>
-        <Paragraph>
-          <pre className="use-global-state-example__code">
-            {`import { useGlobalState } from 'zustand-kit';
-
-// localStorage - 持久化存储，跨浏览器会话（DevTools 自动启用）
-const [settings, setSettings] = useGlobalState(
-  'settings',
-  { theme: 'dark', lang: 'en' },
-  { storage: 'localStorage', storageKey: 'my-app' }
-);
-
-// sessionStorage - 会话存储，仅在当前标签页有效
-const [tempData, setTempData] = useGlobalState(
-  'temp',
-  { count: 0 },
-  { storage: 'sessionStorage' }
-);
-
-// 无持久化（默认）
-const [volatileData] = useGlobalState('volatile', { data: [] });
-
-// 💾 localStorage: 关闭浏览器后数据仍存在
-// 🕐 sessionStorage: 关闭标签页后数据清除
-// ⚡ none: 页面刷新后数据重置`}
-          </pre>
-        </Paragraph>
-
-        <Title level={5}>5. Redux DevTools Integration</Title>
-        <Paragraph>
-          <pre className="use-global-state-example__code">
-            {`import { useGlobalState } from 'zustand-kit';
-
-// 开发环境自动启用 DevTools（默认行为）
-const [data, setData] = useGlobalState('data', { count: 0 });
-
-// 显式启用 DevTools
-const [debugData, setDebugData] = useGlobalState('debug', {}, {
-  enableDevtools: true
-});
-
-// 禁用 DevTools（即使在开发环境）
-const [privateData, setPrivateData] = useGlobalState('private', {}, {
-  enableDevtools: false
-});
-
-// 持久化 + DevTools（推荐用于生产就绪功能）
-const [settings, setSettings] = useGlobalState('settings', {}, {
-  storage: 'localStorage',
-  enableDevtools: true  // 可选，开发环境默认 true
-});
-
-// 🔍 在 Redux DevTools 中查看：
-// - 状态名称: GlobalState:{key}
-// - 时间旅行调试
-// - 动作历史记录
-// - 状态差异视图`}
-          </pre>
-        </Paragraph>
-
-        <Title level={5}>6. Non-React Usage - 纯 JS/TS 代码中使用</Title>
-        <Paragraph>
-          <pre className="use-global-state-example__code">
-            {`import {
-  getGlobalState,
-  setGlobalState,
-  subscribeGlobalState,
-  resetGlobalState
-} from 'zustand-kit';
-
-// 1. 获取状态值
-const count = getGlobalState<number>('counter');
-const user = getGlobalState<UserType>('user');
-
-// 2. 设置状态值
-setGlobalState('counter', 5);
-setGlobalState('counter', prev => prev + 1);
-setGlobalState('user', { name: 'Jane' }); // 对象部分更新
-
-// 3. 订阅状态变化
-const unsubscribe = subscribeGlobalState<number>(
-  'counter',
-  (newValue, prevValue) => {
-    console.log(\`Changed from \${prevValue} to \${newValue}\`);
-  }
-);
-// 取消订阅
-unsubscribe();
-
-// 4. 重置状态
-resetGlobalState('counter');
-
-// 使用场景：
-// - 工具函数、服务类
-// - 事件监听器、WebSocket 回调
-// - 定时器任务
-// - 第三方库集成`}
-          </pre>
-        </Paragraph>
-
-        <Title level={5}>性能对比:</Title>
-        <Paragraph>
-          <pre className="use-global-state-example__code">
-            {`// ❌ 传统方式 - 每次状态变化都会重渲染
-const [user, setUser] = useGlobalState('user', initialUser);
-// 修改任何字段（name/email/age）都会触发重渲染
-
-// ✅ 优化方式 1 - 只订阅需要的字段
-const userName = useGlobalSelector('user', s => s.name);
-// 只有 name 变化才重渲染，email/age 变化不影响
-
-// ✅ 优化方式 2 - 只需要修改，不需要读取
-const setUser = useGlobalSetter('user');
-// 永远不会因为状态变化而重渲染`}
-          </pre>
-        </Paragraph>
-
-        <Title level={5}>特性:</Title>
-        <ul>
-          <li>
-            🎯 <Text strong>统一 API</Text> - 自动识别类型，对象支持部分更新
-          </li>
-          <li>
-            ⚡ <Text strong>性能优化</Text> -
-            细粒度订阅（useGlobalSelector）、只写模式（useGlobalSetter）、自定义相等性比较
-          </li>
-          <li>
-            💾 <Text strong>数据持久化</Text> - 支持 localStorage /
-            sessionStorage
-          </li>
-          <li>
-            🔍 <Text strong>开发者工具</Text> - 开发环境自动集成 Redux DevTools，支持时间旅行调试
-          </li>
-          <li>
-            🔧 <Text strong>非 React 支持</Text> -
-            可在工具函数、服务类、事件监听器中使用
-          </li>
-          <li>
-            ✨ <Text strong>零配置</Text> - 无需 Provider、自动跨组件同步、按
-            key 隔离
-          </li>
-          <li>
-            🛡️ <Text strong>类型安全</Text> - 完整 TypeScript 支持、函数式更新
-          </li>
-          <li>
-            🚀 <Text strong>轻量高效</Text> - 基于 Zustand、内置性能优化
-          </li>
-        </ul>
-      </Card>
     </div>
   );
 };

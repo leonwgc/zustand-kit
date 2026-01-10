@@ -136,6 +136,7 @@ import { useGlobalSelector } from 'zustand-kit';
 
 function UserName() {
   // Only subscribe to user.name, won't re-render when other fields change
+  // Auto-detect: uses Object.is for primitive types
   const userName = useGlobalSelector('user', (state) => state.name);
 
   return <p>Username: {userName}</p>;
@@ -148,12 +149,28 @@ function UserEmail() {
   return <p>Email: {userEmail}</p>;
 }
 
-// Use shallow comparison to optimize object/array selectors
+// Auto-detect: automatically uses shallow comparison for object return
 function UserInfo() {
   const userInfo = useGlobalSelector(
     'user',
+    (state) => ({ name: state.name, email: state.email })
+    // No need to specify 'shallow', auto-detected
+  );
+
+  return (
+    <div>
+      <p>Name: {userInfo.name}</p>
+      <p>Email: {userInfo.email}</p>
+    </div>
+  );
+}
+
+// Explicitly specify 'shallow' mode
+function UserInfoExplicit() {
+  const userInfo = useGlobalSelector(
+    'user',
     (state) => ({ name: state.name, email: state.email }),
-    'shallow' // Built-in shallow comparison
+    'shallow' // Explicitly use shallow comparison
   );
 
   return (
@@ -230,14 +247,16 @@ Create or connect to a global state.
 
 ### `useGlobalSelector<T, R>(key, selector, equalityMode?)`
 
-Subscribe to a specific part of the state using a selector.
+Subscribe to a specific part of the state using a selector. Automatically detects return type and selects appropriate comparison mode.
 
 **Parameters:**
 - `key: string` - State key
 - `selector: (state: T) => R` - Selector function
 - `equalityMode?: 'shallow'` - Optional comparison mode
-  - Default: Uses `Object.is` comparison (suitable for primitive types and single fields)
-  - `'shallow'`: Uses shallow comparison (suitable for objects/arrays)
+  - `undefined` (default): Auto-detect based on return type
+    - Primitive types: uses `Object.is`
+    - Objects/arrays: uses shallow comparison
+  - `'shallow'`: Force shallow comparison
 
 **Returns:** Selected value
 

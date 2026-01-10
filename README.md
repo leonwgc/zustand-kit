@@ -136,6 +136,7 @@ import { useGlobalSelector } from 'zustand-kit';
 
 function UserName() {
   // 仅订阅 user.name，其他字段变化不会触发重渲染
+  // 自动检测：基本类型使用 Object.is
   const userName = useGlobalSelector('user', (state) => state.name);
 
   return <p>用户名: {userName}</p>;
@@ -148,12 +149,28 @@ function UserEmail() {
   return <p>邮箱: {userEmail}</p>;
 }
 
-// 使用浅比较优化对象/数组选择器
+// 自动检测：对象返回值自动使用浅比较
 function UserInfo() {
   const userInfo = useGlobalSelector(
     'user',
+    (state) => ({ name: state.name, email: state.email })
+    // 无需指定 'shallow'，自动检测对象类型并使用浅比较
+  );
+
+  return (
+    <div>
+      <p>姓名: {userInfo.name}</p>
+      <p>邮箱: {userInfo.email}</p>
+    </div>
+  );
+}
+
+// 显式指定 'shallow' 模式
+function UserInfoExplicit() {
+  const userInfo = useGlobalSelector(
+    'user',
     (state) => ({ name: state.name, email: state.email }),
-    'shallow' // 使用内置浅比较
+    'shallow' // 显式指定浅比较
   );
 
   return (
@@ -230,14 +247,16 @@ resetGlobalState('counter');
 
 ### `useGlobalSelector<T, R>(key, selector, equalityMode?)`
 
-使用选择器订阅状态的特定部分。
+使用选择器订阅状态的特定部分。支持自动检测返回值类型并选择合适的比较模式。
 
 **参数：**
 - `key: string` - 状态键
 - `selector: (state: T) => R` - 选择器函数
 - `equalityMode?: 'shallow'` - 可选的比较模式
-  - 默认：使用 `Object.is` 比较（适合基本类型和单一字段）
-  - `'shallow'`：使用浅比较（适合对象/数组）
+  - `undefined` (默认)：自动检测返回值类型
+    - 基本类型：使用 `Object.is`
+    - 对象/数组：使用浅比较
+  - `'shallow'`：强制使用浅比较
 
 **返回：** 选择的值
 
