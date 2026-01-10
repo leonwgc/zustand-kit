@@ -653,6 +653,188 @@ const NonReactStateDisplay: React.FC = () => {
   );
 };
 
+// Example 10: Shallow Comparison for Selector
+let renderCountEqualityFn = 0;
+const UserSelectorWithEqualityFn: React.FC = () => {
+  renderCountEqualityFn++;
+  // Use shallow comparison mode - only re-render if name or email changes
+  const userInfo = useGlobalSelector(
+    'user',
+    (state: { name: string; email: string; age: number }) => ({
+      name: state.name,
+      email: state.email,
+    }),
+    'shallow' // Use built-in shallow comparison
+  );
+
+  return (
+    <Card
+      title="Component D - Shallow Comparison (useShallow)"
+      className="use-global-state-example__card"
+    >
+      <Space direction="vertical" style={{ width: '100%' }}>
+        <Badge
+          count={renderCountEqualityFn}
+          style={{ backgroundColor: '#722ed1' }}
+        >
+          <Text strong>Render Count</Text>
+        </Badge>
+        <div style={{ marginTop: 12 }}>
+          <Text strong>Name: </Text>
+          <Text style={{ fontSize: 16, color: '#1890ff' }}>
+            {userInfo.name}
+          </Text>
+        </div>
+        <div>
+          <Text strong>Email: </Text>
+          <Text style={{ fontSize: 16, color: '#52c41a' }}>
+            {userInfo.email}
+          </Text>
+        </div>
+        <Divider />
+        <Text type="secondary" style={{ fontSize: 12 }}>
+          💡 Uses built-in shallow comparison (useShallow)
+          <br />
+          Try changing age in Component A - this won't re-render!
+          <br />
+          Only re-renders when name or email changes.
+        </Text>
+        <Divider />
+        <Text type="secondary" style={{ fontSize: 12 }}>
+          📝 Code:
+        </Text>
+        <pre
+          style={{
+            background: '#f5f5f5',
+            padding: 8,
+            borderRadius: 4,
+            fontSize: 11,
+          }}
+        >
+          {`// Default: Object.is comparison
+const userName = useGlobalSelector(
+  'user',
+  (state) => state.name
+);
+
+// Shallow comparison for objects/arrays
+const userInfo = useGlobalSelector(
+  'user',
+  (state) => ({
+    name: state.name,
+    email: state.email
+  }),
+  'shallow' // Built-in shallow comparison
+);`}
+        </pre>
+      </Space>
+    </Card>
+  );
+};
+
+// Example 11: DevTools Integration
+const DevToolsExample: React.FC = () => {
+  const [debugData, setDebugData] = useGlobalState(
+    'debug-data',
+    {
+      counter: 0,
+      clicks: [] as number[],
+      lastAction: 'none',
+    },
+    {
+      enableDevtools: true, // Explicitly enable (auto-enabled in dev mode)
+    }
+  );
+
+  const handleIncrement = () => {
+    setDebugData({
+      counter: debugData.counter + 1,
+      clicks: [...debugData.clicks, Date.now()],
+      lastAction: 'increment',
+    });
+  };
+
+  const handleReset = () => {
+    setDebugData({
+      counter: 0,
+      clicks: [],
+      lastAction: 'reset',
+    });
+  };
+
+  return (
+    <Card
+      title="Redux DevTools Integration"
+      className="use-global-state-example__card"
+    >
+      <Space direction="vertical" style={{ width: '100%' }}>
+        <Text type="secondary" style={{ fontSize: 12 }}>
+          🔍 Open Redux DevTools to see state changes in real-time
+          <br />
+          State name: <Text code>GlobalState:debug-data</Text>
+        </Text>
+        <Divider />
+        <div style={{ textAlign: 'center', padding: '20px 0' }}>
+          <Text style={{ fontSize: 48, fontWeight: 'bold', color: '#722ed1' }}>
+            {debugData.counter}
+          </Text>
+        </div>
+        <div>
+          <Text strong>Last Action: </Text>
+          <Text type={debugData.lastAction === 'reset' ? 'danger' : undefined}>
+            {debugData.lastAction}
+          </Text>
+        </div>
+        <div>
+          <Text strong>Click History: </Text>
+          <Text type="secondary">{debugData.clicks.length} clicks</Text>
+        </div>
+        <Space style={{ marginTop: 12 }}>
+          <Button type="primary" onClick={handleIncrement}>
+            Increment
+          </Button>
+          <Button danger onClick={handleReset}>
+            Reset
+          </Button>
+        </Space>
+        <Divider />
+        <Text type="secondary" style={{ fontSize: 12 }}>
+          💡 DevTools Features:
+          <br />• Time-travel debugging
+          <br />• Action history
+          <br />• State diff view
+          <br />• Auto-enabled in development
+        </Text>
+        <Divider />
+        <Text type="secondary" style={{ fontSize: 12 }}>
+          📝 Configuration:
+        </Text>
+        <pre
+          style={{
+            background: '#f5f5f5',
+            padding: 8,
+            borderRadius: 4,
+            fontSize: 11,
+          }}
+        >
+          {`// Auto-enabled in dev (default)
+useGlobalState('key', initialState);
+
+// Explicitly enable
+useGlobalState('key', initialState, {
+  enableDevtools: true
+});
+
+// Disable in dev
+useGlobalState('key', initialState, {
+  enableDevtools: false
+});`}
+        </pre>
+      </Space>
+    </Card>
+  );
+};
+
 const Example: React.FC = () => {
   const [showOptimized, setShowOptimized] = useState(false);
 
@@ -685,7 +867,6 @@ const Example: React.FC = () => {
       <div className="use-global-state-example__row">
         <UserComponentA />
         <UserComponentB />
-        {showOptimized && <UserNameDisplay />}
       </div>
 
       <Divider style={{ margin: '32px 0' }} />
@@ -693,7 +874,7 @@ const Example: React.FC = () => {
       <Title level={3}>3. Performance Optimization</Title>
       <Paragraph>
         <Text strong>优化重渲染：</Text>使用 <Text code>useGlobalSelector</Text>{' '}
-        和 <Text code>useGlobalSetter</Text> 减少不必要的组件重渲染
+        和 <Text code>useGlobalSetter</Text> 减少不必要的组件重渲染，支持浅比较优化
       </Paragraph>
       <Space style={{ marginBottom: 16 }}>
         <Button
@@ -701,6 +882,7 @@ const Example: React.FC = () => {
           onClick={() => {
             renderCountSelector = 0;
             renderCountSetter = 0;
+            renderCountEqualityFn = 0;
             setShowOptimized(!showOptimized);
           }}
         >
@@ -712,11 +894,28 @@ const Example: React.FC = () => {
           </Text>
         )}
       </Space>
+      {showOptimized && (
+        <div className="use-global-state-example__row">
+          <UserNameDisplay />
+          <CounterButtons />
+          <UserSelectorWithEqualityFn />
+        </div>
+      )}
+
+      <Divider style={{ margin: '32px 0' }} />
+
+      <Title level={3}>4. Redux DevTools Integration</Title>
+      <Paragraph>
+        <Text strong>开发者工具：</Text>开发环境自动集成 Redux DevTools，支持时间旅行调试
+      </Paragraph>
+      <div className="use-global-state-example__row">
+        <DevToolsExample />
+      </div>
 
       <Divider style={{ margin: '32px 0' }} />
 
       <Title level={3}>
-        4. Persistent State - localStorage & sessionStorage
+        5. Persistent State - localStorage & sessionStorage
       </Title>
       <Paragraph>
         <Text strong>数据持久化：</Text>使用 <Text code>storage</Text>{' '}
@@ -729,7 +928,7 @@ const Example: React.FC = () => {
 
       <Divider style={{ margin: '32px 0' }} />
 
-      <Title level={3}>5. Shopping Cart Example</Title>
+      <Title level={3}>6. Shopping Cart Example</Title>
       <Paragraph>
         实际场景示例：购物车状态在商品列表和购物车组件间共享
       </Paragraph>
@@ -740,7 +939,7 @@ const Example: React.FC = () => {
 
       <Divider style={{ margin: '32px 0' }} />
 
-      <Title level={3}>6. Non-React Usage - Pure JavaScript/TypeScript</Title>
+      <Title level={3}>7. Non-React Usage - Pure JavaScript/TypeScript</Title>
       <Paragraph>
         <Text strong>在非 React 代码中使用：</Text>
         工具函数、服务类、事件监听器、定时器等场景
@@ -782,14 +981,16 @@ setUser(prev => ({ ...prev, age: 26 })); // 函数式更新`}
 // 只订阅特定字段，其他字段变化不会触发重渲染
 const userName = useGlobalSelector('user', state => state.name);
 
-// 订阅多个字段
-const userInfo = useGlobalSelector('user', state => ({
-  name: state.name,
-  email: state.email
-}));
+// 订阅多个字段（使用内置浅比较）
+const userInfo = useGlobalSelector(
+  'user',
+  state => ({ name: state.name, email: state.email }),
+  'shallow' // 使用 useShallow 进行浅比较
+);
 
-// ⚡ 性能优势：只有 name 变化时才重渲染
-// 修改 age 或 email 字段不会影响此组件`}
+// ⚡ 性能优势：
+// - 默认模式：使用 Object.is 比较（适合基本类型和单一字段）
+// - 'shallow' 模式：使用 useShallow 浅比较（适合对象/数组）`}
           </pre>
         </Paragraph>
 
@@ -815,7 +1016,7 @@ setUser({ name: 'Jane' });
           <pre className="use-global-state-example__code">
             {`import { useGlobalState } from 'zustand-kit';
 
-// localStorage - 持久化存储，跨浏览器会话
+// localStorage - 持久化存储，跨浏览器会话（DevTools 自动启用）
 const [settings, setSettings] = useGlobalState(
   'settings',
   { theme: 'dark', lang: 'en' },
@@ -838,7 +1039,39 @@ const [volatileData] = useGlobalState('volatile', { data: [] });
           </pre>
         </Paragraph>
 
-        <Title level={5}>5. Non-React Usage - 纯 JS/TS 代码中使用</Title>
+        <Title level={5}>5. Redux DevTools Integration</Title>
+        <Paragraph>
+          <pre className="use-global-state-example__code">
+            {`import { useGlobalState } from 'zustand-kit';
+
+// 开发环境自动启用 DevTools（默认行为）
+const [data, setData] = useGlobalState('data', { count: 0 });
+
+// 显式启用 DevTools
+const [debugData, setDebugData] = useGlobalState('debug', {}, {
+  enableDevtools: true
+});
+
+// 禁用 DevTools（即使在开发环境）
+const [privateData, setPrivateData] = useGlobalState('private', {}, {
+  enableDevtools: false
+});
+
+// 持久化 + DevTools（推荐用于生产就绪功能）
+const [settings, setSettings] = useGlobalState('settings', {}, {
+  storage: 'localStorage',
+  enableDevtools: true  // 可选，开发环境默认 true
+});
+
+// 🔍 在 Redux DevTools 中查看：
+// - 状态名称: GlobalState:{key}
+// - 时间旅行调试
+// - 动作历史记录
+// - 状态差异视图`}
+          </pre>
+        </Paragraph>
+
+        <Title level={5}>6. Non-React Usage - 纯 JS/TS 代码中使用</Title>
         <Paragraph>
           <pre className="use-global-state-example__code">
             {`import {
@@ -902,11 +1135,14 @@ const setUser = useGlobalSetter('user');
           </li>
           <li>
             ⚡ <Text strong>性能优化</Text> -
-            细粒度订阅（useGlobalSelector）、只写模式（useGlobalSetter）
+            细粒度订阅（useGlobalSelector）、只写模式（useGlobalSetter）、自定义相等性比较
           </li>
           <li>
             💾 <Text strong>数据持久化</Text> - 支持 localStorage /
             sessionStorage
+          </li>
+          <li>
+            🔍 <Text strong>开发者工具</Text> - 开发环境自动集成 Redux DevTools，支持时间旅行调试
           </li>
           <li>
             🔧 <Text strong>非 React 支持</Text> -

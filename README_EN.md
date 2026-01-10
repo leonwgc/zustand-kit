@@ -9,9 +9,10 @@ A lightweight and flexible state management library for React built on top of Zu
 - 🚀 **Simple API** - Minimal API design, easy to get started
 - 🎯 **Type Safe** - Full TypeScript support
 - 💾 **Persistence** - Built-in localStorage/sessionStorage support
+- 🔍 **DevTools** - Automatic Redux DevTools integration in development
 - ⚡ **High Performance** - Built on Zustand, excellent performance
 - 🔄 **Flexible Updates** - Support partial object updates and functional updates
-- 🎨 **Selector Support** - Fine-grained subscriptions to avoid unnecessary re-renders
+- 🎨 **Selector Support** - Fine-grained subscriptions with custom equality functions
 - 🌐 **Non-React Support** - Standalone APIs for non-component scenarios
 
 ## 📦 Installation
@@ -77,7 +78,7 @@ function UserProfile() {
 import { useGlobalState } from 'zustand-kit';
 
 function Settings() {
-  // Persist with localStorage
+  // Persist with localStorage (DevTools auto-enabled in development)
   const [settings, setSettings] = useGlobalState(
     'settings',
     { theme: 'dark', lang: 'en-US' },
@@ -105,6 +106,29 @@ function Settings() {
 }
 ```
 
+### Redux DevTools Integration
+
+In development mode, all global states are automatically integrated with Redux DevTools for debugging:
+
+```tsx
+import { useGlobalState } from 'zustand-kit';
+
+// DevTools auto-enabled in development (default behavior)
+const [data, setData] = useGlobalState('data', { count: 0 });
+
+// Disable DevTools (even in development)
+const [privateData, setPrivateData] = useGlobalState('private', {}, {
+  enableDevtools: false
+});
+
+// Force enable DevTools in production (not recommended)
+const [debugData, setDebugData] = useGlobalState('debug', {}, {
+  enableDevtools: true
+});
+```
+
+In Redux DevTools, each state is displayed with the name `GlobalState:{key}`.
+
 ### Selector Pattern (Performance Optimization)
 
 ```tsx
@@ -122,6 +146,22 @@ function UserEmail() {
   const userEmail = useGlobalSelector('user', (state) => state.email);
 
   return <p>Email: {userEmail}</p>;
+}
+
+// Use custom equality function to optimize object selectors
+function UserInfo() {
+  const userInfo = useGlobalSelector(
+    'user',
+    (state) => ({ name: state.name, email: state.email }),
+    (a, b) => a.name === b.name && a.email === b.email // Shallow comparison
+  );
+
+  return (
+    <div>
+      <p>Name: {userInfo.name}</p>
+      <p>Email: {userInfo.email}</p>
+    </div>
+  );
 }
 ```
 

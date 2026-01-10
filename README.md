@@ -9,9 +9,10 @@
 - 🚀 **简单易用** - 最小化的 API 设计，易于上手
 - 🎯 **类型安全** - 完整的 TypeScript 支持
 - 💾 **持久化** - 内置 localStorage/sessionStorage 支持
+- 🔍 **开发者工具** - 开发环境自动集成 Redux DevTools
 - ⚡ **高性能** - 基于 Zustand，性能卓越
 - 🔄 **灵活更新** - 支持对象部分更新和函数式更新
-- 🎨 **选择器支持** - 细粒度订阅，避免不必要的重渲染
+- 🎨 **选择器支持** - 细粒度订阅，支持自定义相等性比较
 - 🌐 **非 React 环境支持** - 提供独立的 API 用于非组件场景
 
 ## 📦 安装
@@ -77,7 +78,7 @@ function UserProfile() {
 import { useGlobalState } from 'zustand-kit';
 
 function Settings() {
-  // 使用 localStorage 持久化
+  // 使用 localStorage 持久化（开发环境自动启用 DevTools）
   const [settings, setSettings] = useGlobalState(
     'settings',
     { theme: 'dark', lang: 'zh-CN' },
@@ -105,6 +106,29 @@ function Settings() {
 }
 ```
 
+### Redux DevTools 集成
+
+在开发环境下，所有全局状态会自动集成 Redux DevTools，便于调试：
+
+```tsx
+import { useGlobalState } from 'zustand-kit';
+
+// 开发环境自动启用 DevTools（默认行为）
+const [data, setData] = useGlobalState('data', { count: 0 });
+
+// 禁用 DevTools（即使在开发环境）
+const [privateData, setPrivateData] = useGlobalState('private', {}, {
+  enableDevtools: false
+});
+
+// 强制启用 DevTools（生产环境，不推荐）
+const [debugData, setDebugData] = useGlobalState('debug', {}, {
+  enableDevtools: true
+});
+```
+
+在 Redux DevTools 中，每个状态会以 `GlobalState:{key}` 命名显示。
+
 ### 选择器模式（性能优化）
 
 ```tsx
@@ -122,6 +146,22 @@ function UserEmail() {
   const userEmail = useGlobalSelector('user', (state) => state.email);
 
   return <p>邮箱: {userEmail}</p>;
+}
+
+// 使用自定义相等性函数优化对象选择器
+function UserInfo() {
+  const userInfo = useGlobalSelector(
+    'user',
+    (state) => ({ name: state.name, email: state.email }),
+    (a, b) => a.name === b.name && a.email === b.email // 浅比较
+  );
+
+  return (
+    <div>
+      <p>姓名: {userInfo.name}</p>
+      <p>邮箱: {userInfo.email}</p>
+    </div>
+  );
 }
 ```
 

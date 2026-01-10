@@ -5,7 +5,8 @@
 
 import { create, StoreApi, UseBoundStore, StateCreator } from 'zustand';
 import { persist, createJSONStorage, devtools } from 'zustand/middleware';
-import { useMemo, useSyncExternalStore } from 'react';
+import { useMemo, useRef, useCallback, useEffect } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 
 /**
  * Global state storage
@@ -64,11 +65,11 @@ export interface UseGlobalStateOptions {
 
 /**
  * Universal global state hook - supports both simple values and objects
- * Performance optimized with selector pattern
+ * Performance optimized with selector pattern and automatic Redux DevTools integration
  *
  * @param key - Unique key for the state
  * @param initialState - Initial state (any type)
- * @param options - Configuration options including persistence
+ * @param options - Configuration options including persistence and devtools
  * @returns [state, setState, resetState]
  *
  * @example
@@ -81,18 +82,30 @@ export interface UseGlobalStateOptions {
  * const [user, setUser, resetUser] = useGlobalState('user', {
  *   name: 'John',
  *   email: 'john@example.com',
+ *   age: 30
  * });
- * setUser({ name: 'Jane' }); // Partial update
+ * setUser({ name: 'Jane' }); // Partial update - only updates name field
+ * setUser(prev => ({ ...prev, age: prev.age + 1 })); // Functional update
  *
- * // With localStorage persistence
+ * // With localStorage persistence (DevTools enabled by default in development)
  * const [settings, setSettings] = useGlobalState('settings', { theme: 'dark' }, {
  *   storage: 'localStorage'
  * });
  *
- * // With sessionStorage persistence
+ * // With sessionStorage persistence and custom storage key
  * const [tempData, setTempData] = useGlobalState('temp', { foo: 'bar' }, {
  *   storage: 'sessionStorage',
  *   storageKey: 'my-app'
+ * });
+ *
+ * // Disable DevTools in development
+ * const [privateData, setPrivateData] = useGlobalState('private', {}, {
+ *   enableDevtools: false
+ * });
+ *
+ * // Force enable DevTools in production (not recommended)
+ * const [debugData, setDebugData] = useGlobalState('debug', {}, {
+ *   enableDevtools: true
  * });
  *
  * // For non-React usage, see: getGlobalState, setGlobalState, subscribeGlobalState, resetGlobalState
@@ -105,6 +118,7 @@ export function useGlobalState<T>(
   const {
     storage = 'none',
     storageKey = 'global-state',
+    // Auto-enable Redux DevTools in development for better debugging experience
     enableDevtools = process.env.NODE_ENV !== 'production'
   } = options || {};
 
@@ -131,8 +145,9 @@ export function useGlobalState<T>(
     let store: UseBoundStore<StoreApi<StoreState<T>>>;
 
     // Compose middlewares based on options
+    // Middleware order: devtools(persist(...)) ensures all state changes are tracked
     if (storage !== 'none' && enableDevtools) {
-      // Both persistence and devtools
+      // Both persistence and devtools - best for production-ready features
       const storageImpl = storage === 'localStorage' ? localStorage : sessionStorage;
 
       store = create<StoreState<T>>()(
@@ -145,7 +160,7 @@ export function useGlobalState<T>(
         )
       );
     } else if (storage !== 'none') {
-      // Only persistence
+      // Only persistence - production mode without debugging
       const storageImpl = storage === 'localStorage' ? localStorage : sessionStorage;
 
       store = create<StoreState<T>>()(
@@ -155,10 +170,10 @@ export function useGlobalState<T>(
         })
       );
     } else if (enableDevtools) {
-      // Only devtools
+      // Only devtools - development mode for debugging
       store = create<StoreState<T>>()(devtools(stateCreator, { name: `GlobalState:${key}` }));
     } else {
-      // No middleware
+      // No middleware - minimal overhead
       store = create<StoreState<T>>(stateCreator);
     }
 
@@ -188,28 +203,27 @@ export function useGlobalState<T>(
 /**
  * Advanced hook with custom selector for fine-grained subscriptions
  * Only re-renders when selected value changes
+ * Supports two comparison modes: Object.is (default) and shallow comparison
+ *
+ * @param key - Global state key
+ * @param selector - Function to select part of the state
+ * @param equalityMode - Optional 'shallow' for shallow comparison, defaults to Object.is
  *
  * @example
- * // Only subscribe to user name, not the whole user object
+ * // Default: Object.is comparison - only subscribe to user name
  * const userName = useGlobalSelector('user', (state) => state.name);
  *
- * // Multiple values
- * const { name, email } = useGlobalSelector(
- *   'user',
- *   (state) => ({ name: state.name, email: state.email })
- * );
- *
- * // With custom equality function (shallow comparison)
- * const user = useGlobalSelector(
+ * // Shallow comparison - for objects/arrays
+ * const userInfo = useGlobalSelector(
  *   'user',
  *   (state) => ({ name: state.name, email: state.email }),
- *   (a, b) => a.name === b.name && a.email === b.email
+ *   'shallow'
  * );
  */
 export function useGlobalSelector<T, R>(
   key: string,
   selector: (state: T) => R,
-  equalityFn: (a: R, b: R) => boolean = Object.is
+  equalityMode?: 'shallow'
 ): R {
   const store = globalStates.get(key) as UseBoundStore<StoreApi<StoreState<T>>>;
 
@@ -217,27 +231,26 @@ export function useGlobalSelector<T, R>(
     throw new Error(`Global state with key "${key}" not found. Initialize it with useGlobalState first.`);
   }
 
-  // If no custom equality function, use zustand's default behavior
-  if (equalityFn === Object.is) {
-    return store((state) => selector(state.value));
+  // Memoize selector to avoid recreation
+  const selectorRef = useRef(selector);
+
+  // Keep ref updated
+  useEffect(() => {
+    selectorRef.current = selector;
+  });
+
+  const wrappedSelector = useCallback(
+    (state: StoreState<T>) => selectorRef.current(state.value),
+    []
+  );
+
+  // Use shallow comparison if requested
+  if (equalityMode === 'shallow') {
+    return store(useShallow(wrappedSelector)) as R;
   }
 
-  // For custom equality function, use useSyncExternalStore
-  const subscribe = useMemo(
-    () => (callback: () => void) => store.subscribe(callback),
-    [store]
-  );
-
-  const getSnapshot = useMemo(
-    () => () => selector(store.getState().value),
-    [store, selector]
-  );
-
-  return useSyncExternalStore(
-    subscribe,
-    getSnapshot,
-    getSnapshot
-  );
+  // Default: use zustand's default Object.is comparison
+  return store(wrappedSelector);
 }
 
 /**
