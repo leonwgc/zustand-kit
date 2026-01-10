@@ -4,7 +4,7 @@
  */
 
 import { create, StoreApi, UseBoundStore, StateCreator } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { persist, createJSONStorage, devtools } from 'zustand/middleware';
 import { useMemo, useSyncExternalStore } from 'react';
 
 /**
@@ -55,6 +55,11 @@ export interface UseGlobalStateOptions {
    * @default 'global-state'
    */
   storageKey?: string;
+  /**
+   * Enable Redux DevTools integration
+   * @default true in development, false in production
+   */
+  enableDevtools?: boolean;
 }
 
 /**
@@ -97,7 +102,11 @@ export function useGlobalState<T>(
   initialState: T,
   options?: UseGlobalStateOptions
 ): [T, (value: SetterValue<T>) => void, () => void] {
-  const { storage = 'none', storageKey = 'global-state' } = options || {};
+  const {
+    storage = 'none',
+    storageKey = 'global-state',
+    enableDevtools = process.env.NODE_ENV !== 'production'
+  } = options || {};
 
   if (!globalStates.has(key)) {
     const isObject = typeof initialState === 'object' && initialState !== null && !Array.isArray(initialState);
@@ -121,8 +130,22 @@ export function useGlobalState<T>(
 
     let store: UseBoundStore<StoreApi<StoreState<T>>>;
 
-    if (storage !== 'none') {
-      // Create store with persistence
+    // Compose middlewares based on options
+    if (storage !== 'none' && enableDevtools) {
+      // Both persistence and devtools
+      const storageImpl = storage === 'localStorage' ? localStorage : sessionStorage;
+
+      store = create<StoreState<T>>()(
+        devtools(
+          persist(stateCreator, {
+            name: `${storageKey}-${key}`,
+            storage: createJSONStorage(() => storageImpl),
+          }),
+          { name: `GlobalState:${key}` }
+        )
+      );
+    } else if (storage !== 'none') {
+      // Only persistence
       const storageImpl = storage === 'localStorage' ? localStorage : sessionStorage;
 
       store = create<StoreState<T>>()(
@@ -131,8 +154,11 @@ export function useGlobalState<T>(
           storage: createJSONStorage(() => storageImpl),
         })
       );
+    } else if (enableDevtools) {
+      // Only devtools
+      store = create<StoreState<T>>()(devtools(stateCreator, { name: `GlobalState:${key}` }));
     } else {
-      // Create store without persistence
+      // No middleware
       store = create<StoreState<T>>(stateCreator);
     }
 

@@ -29,6 +29,11 @@ export interface UseGlobalStateOptions {
      * @default 'global-state'
      */
     storageKey?: string;
+    /**
+     * Enable Redux DevTools integration
+     * @default true in development, false in production
+     */
+    enableDevtools?: boolean;
 }
 /**
  * Universal global state hook - supports both simple values and objects
