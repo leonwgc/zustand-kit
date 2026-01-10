@@ -38,13 +38,13 @@ The test suite covers:
 
 ### useGlobalSelector
 - ✅ Basic field selection
+- ✅ Selective re-rendering (Object.is comparison)
+- ✅ Shallow comparison mode for objects
+- ✅ Shallow comparison mode for arrays
 - ✅ Nested field selection
-- ✅ Multiple field selection
-- ✅ Derived value computation
-- ✅ Selective re-rendering
 - ✅ Multiple independent selectors
 - ✅ Complex transformations (arrays, objects)
-- ✅ Error handling
+- ✅ Error handling (non-existent state)
 
 ### useGlobalSetter
 - ✅ Getting setter function
