@@ -9,5 +9,8 @@ run({
     html: {
       title: 'zustand-kit Demo',
     },
+    server: {
+      open: true,
+    },
   },
 });
