@@ -14,11 +14,40 @@ import { useShallow } from 'zustand/react/shallow';
 const globalStates = new Map<string, UseBoundStore<StoreApi<unknown>>>();
 
 /**
+ * Unified DevTools store for aggregated state view
+ */
+let devToolsStore: UseBoundStore<StoreApi<Record<string, unknown>>> | null =
+  null;
+
+/**
+ * Initialize or get the unified DevTools store
+ */
+function getDevToolsStore(): UseBoundStore<StoreApi<Record<string, unknown>>> {
+  if (!devToolsStore) {
+    devToolsStore = create<Record<string, unknown>>()(
+      devtools(() => ({}), { name: 'GlobalStates (All)' })
+    );
+  }
+  return devToolsStore;
+}
+
+/**
+ * Sync individual state to unified DevTools store
+ */
+function syncToDevTools(key: string, value: unknown) {
+  if (devToolsStore) {
+    const currentState = devToolsStore.getState();
+    devToolsStore.setState({ ...currentState, [key]: value });
+  }
+}
+
+/**
  * Clear all global states (for testing purposes)
  * @internal
  */
 export function __clearAllStates__() {
   globalStates.clear();
+  devToolsStore = null;
 }
 
 /**
@@ -57,7 +86,7 @@ export interface UseGlobalStateOptions {
    */
   storageKey?: string;
   /**
-   * Enable Redux DevTools integration
+   * Enable Redux DevTools integration (aggregated view only)
    * @default true in development, false in production
    */
   enableDevtools?: boolean;
@@ -98,12 +127,12 @@ export interface UseGlobalStateOptions {
  *   storageKey: 'my-app'
  * });
  *
- * // Disable DevTools in development
+ * // Disable aggregated DevTools in development
  * const [privateData, setPrivateData] = useGlobalState('private', {}, {
  *   enableDevtools: false
  * });
  *
- * // Force enable DevTools in production (not recommended)
+ * // Force enable aggregated DevTools in production (not recommended)
  * const [debugData, setDebugData] = useGlobalState('debug', {}, {
  *   enableDevtools: true
  * });
@@ -119,6 +148,7 @@ export function useGlobalState<T>(
     storage = 'none',
     storageKey = 'global-state',
     // Auto-enable Redux DevTools in development for better debugging experience
+    // Only aggregated view is shown, individual state stores don't have separate DevTools instances
     enableDevtools = process.env.NODE_ENV !== 'production',
   } = options || {};
 
@@ -128,43 +158,49 @@ export function useGlobalState<T>(
       initialState !== null &&
       !Array.isArray(initialState);
 
-    const stateCreator: StateCreator<StoreState<T>, [], []> = (set) => ({
+    const stateCreator: StateCreator<StoreState<T>, [], []> = (set, get) => ({
       value: initialState,
       setValue: (value) => {
         if (typeof value === 'function') {
           // Functional update
-          set((state) => ({ value: (value as (prev: T) => T)(state.value) }));
+          set((state) => {
+            const newValue = (value as (prev: T) => T)(state.value);
+            if (enableDevtools) {
+              syncToDevTools(key, newValue);
+            }
+            return { value: newValue };
+          });
         } else if (isObject && typeof value === 'object' && value !== null) {
           // Partial update for objects
-          set((state) => ({ value: { ...state.value, ...value } as T }));
+          set((state) => {
+            const newValue = { ...state.value, ...value } as T;
+            if (enableDevtools) {
+              syncToDevTools(key, newValue);
+            }
+            return { value: newValue };
+          });
         } else {
           // Direct value update
           set({ value: value as T });
+          if (enableDevtools) {
+            syncToDevTools(key, value as T);
+          }
         }
       },
-      reset: () => set({ value: initialState }),
+      reset: () => {
+        set({ value: initialState });
+        if (enableDevtools) {
+          syncToDevTools(key, initialState);
+        }
+      },
     });
 
     let store: UseBoundStore<StoreApi<StoreState<T>>>;
 
     // Compose middlewares based on options
-    // Middleware order: devtools(persist(...)) ensures all state changes are tracked
-    if (storage !== 'none' && enableDevtools) {
-      // Both persistence and devtools - best for production-ready features
-      const storageImpl =
-        storage === 'localStorage' ? localStorage : sessionStorage;
-
-      store = create<StoreState<T>>()(
-        devtools(
-          persist(stateCreator, {
-            name: `${storageKey}-${key}`,
-            storage: createJSONStorage(() => storageImpl),
-          }),
-          { name: `GlobalState:${key}` }
-        )
-      );
-    } else if (storage !== 'none') {
-      // Only persistence - production mode without debugging
+    // Only persist middleware is applied, DevTools integration is aggregated only
+    if (storage !== 'none') {
+      // Persistence enabled
       const storageImpl =
         storage === 'localStorage' ? localStorage : sessionStorage;
 
@@ -174,17 +210,18 @@ export function useGlobalState<T>(
           storage: createJSONStorage(() => storageImpl),
         })
       );
-    } else if (enableDevtools) {
-      // Only devtools - development mode for debugging
-      store = create<StoreState<T>>()(
-        devtools(stateCreator, { name: `GlobalState:${key}` })
-      );
     } else {
       // No middleware - minimal overhead
       store = create<StoreState<T>>(stateCreator);
     }
 
     globalStates.set(key, store as UseBoundStore<StoreApi<unknown>>);
+
+    // Initialize unified DevTools and sync initial state AFTER store creation
+    if (enableDevtools) {
+      getDevToolsStore();
+      syncToDevTools(key, initialState);
+    }
   }
 
   const store = globalStates.get(key) as UseBoundStore<StoreApi<StoreState<T>>>;

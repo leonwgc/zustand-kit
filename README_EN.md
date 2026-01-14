@@ -108,7 +108,7 @@ function Settings() {
 
 ### Redux DevTools Integration
 
-In development mode, all global states are automatically integrated with Redux DevTools for debugging:
+In development mode, all global states are automatically integrated into a unified Redux DevTools view for debugging:
 
 ```tsx
 import { useGlobalState } from 'zustand-kit';
@@ -127,7 +127,7 @@ const [debugData, setDebugData] = useGlobalState('debug', {}, {
 });
 ```
 
-In Redux DevTools, each state is displayed with the name `GlobalState:{key}`.
+**Note:** All global states are aggregated into a single DevTools instance named `GlobalStates (All)`, where each state is displayed as a property with its key, making it easy to view and debug all states in one place.
 
 ### Selector Pattern (Performance Optimization)
 
@@ -242,8 +242,11 @@ Create or connect to a global state.
 - `options?: UseGlobalStateOptions` - Optional configuration
   - `storage?: 'localStorage' | 'sessionStorage' | 'none'` - Persistence type (default 'none')
   - `storageKey?: string` - Storage key prefix (default 'global-state')
+  - `enableDevtools?: boolean` - Enable Redux DevTools (default true in development, false in production)
 
 **Returns:** `[state, setState, resetState]`
+
+**Note:** For object type states, `setState` supports partial updates. For example: `setUser({ name: 'Jane' })` will only update the `name` field while keeping other fields unchanged.
 
 ### `useGlobalSelector<T, R>(key, selector, equalityMode?)`
 
@@ -252,11 +255,12 @@ Subscribe to a specific part of the state using a selector. Automatically detect
 **Parameters:**
 - `key: string` - State key
 - `selector: (state: T) => R` - Selector function
-- `equalityMode?: 'shallow'` - Optional comparison mode
+- `equalityMode?: 'shallow' | false` - Optional comparison mode
   - `undefined` (default): Auto-detect based on return type
     - Primitive types: uses `Object.is`
     - Objects/arrays: uses shallow comparison
   - `'shallow'`: Force shallow comparison
+  - `false`: Force `Object.is` comparison (even for objects)
 
 **Returns:** Selected value
 

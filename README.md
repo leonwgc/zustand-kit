@@ -108,7 +108,7 @@ function Settings() {
 
 ### Redux DevTools 集成
 
-在开发环境下，所有全局状态会自动集成 Redux DevTools，便于调试：
+在开发环境下，所有全局状态会自动集成到统一的 Redux DevTools 视图中，便于调试：
 
 ```tsx
 import { useGlobalState } from 'zustand-kit';
@@ -127,7 +127,7 @@ const [debugData, setDebugData] = useGlobalState('debug', {}, {
 });
 ```
 
-在 Redux DevTools 中，每个状态会以 `GlobalState:{key}` 命名显示。
+**注意：** 所有全局状态会聚合到一个名为 `GlobalStates (All)` 的 DevTools 实例中，每个状态以其 key 作为属性显示，方便统一查看和调试所有状态。
 
 ### 选择器模式（性能优化）
 
@@ -242,8 +242,11 @@ resetGlobalState('counter');
 - `options?: UseGlobalStateOptions` - 可选配置
   - `storage?: 'localStorage' | 'sessionStorage' | 'none'` - 持久化类型（默认 'none'）
   - `storageKey?: string` - 存储键前缀（默认 'global-state'）
+  - `enableDevtools?: boolean` - 是否启用 Redux DevTools（开发环境默认 true，生产环境默认 false）
 
 **返回：** `[state, setState, resetState]`
+
+**注意：** 对于对象类型的状态，`setState` 支持部分更新。例如：`setUser({ name: 'Jane' })` 只会更新 `name` 字段，其他字段保持不变。
 
 ### `useGlobalSelector<T, R>(key, selector, equalityMode?)`
 
@@ -252,11 +255,12 @@ resetGlobalState('counter');
 **参数：**
 - `key: string` - 状态键
 - `selector: (state: T) => R` - 选择器函数
-- `equalityMode?: 'shallow'` - 可选的比较模式
+- `equalityMode?: 'shallow' | false` - 可选的比较模式
   - `undefined` (默认)：自动检测返回值类型
     - 基本类型：使用 `Object.is`
     - 对象/数组：使用浅比较
   - `'shallow'`：强制使用浅比较
+  - `false`：强制使用 `Object.is` 比较（即使对象类型）
 
 **返回：** 选择的值
 
