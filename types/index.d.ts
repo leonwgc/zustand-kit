@@ -26,7 +26,7 @@ export interface UseGlobalStateOptions {
      */
     storageKey?: string;
     /**
-     * Enable Redux DevTools integration
+     * Enable Redux DevTools integration (aggregated view only)
      * @default true in development, false in production
      */
     enableDevtools?: boolean;
@@ -66,12 +66,12 @@ export interface UseGlobalStateOptions {
  *   storageKey: 'my-app'
  * });
  *
- * // Disable DevTools in development
+ * // Disable aggregated DevTools in development
  * const [privateData, setPrivateData] = useGlobalState('private', {}, {
  *   enableDevtools: false
  * });
  *
- * // Force enable DevTools in production (not recommended)
+ * // Force enable aggregated DevTools in production (not recommended)
  * const [debugData, setDebugData] = useGlobalState('debug', {}, {
  *   enableDevtools: true
  * });
