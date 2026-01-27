@@ -1,4 +1,15 @@
 /**
+ * Configure global DevTools integration
+ * @param enabled - Whether to enable Redux DevTools integration for all global states
+ * @example
+ * // Disable DevTools in development
+ * configureDevtools(false);
+ *
+ * // Enable DevTools in production (not recommended)
+ * configureDevtools(true);
+ */
+export declare function configureDevtools(enabled: boolean): void;
+/**
  * Clear all global states (for testing purposes)
  * @internal
  */
@@ -25,11 +36,6 @@ export interface UseGlobalStateOptions {
      * @default 'global-state'
      */
     storageKey?: string;
-    /**
-     * Enable Redux DevTools integration (aggregated view only)
-     * @default true in development, false in production
-     */
-    enableDevtools?: boolean;
 }
 /**
  * Universal global state hook - supports both simple values and objects
@@ -66,15 +72,9 @@ export interface UseGlobalStateOptions {
  *   storageKey: 'my-app'
  * });
  *
- * // Disable aggregated DevTools in development
- * const [privateData, setPrivateData] = useGlobalState('private', {}, {
- *   enableDevtools: false
- * });
- *
- * // Force enable aggregated DevTools in production (not recommended)
- * const [debugData, setDebugData] = useGlobalState('debug', {}, {
- *   enableDevtools: true
- * });
+ * // Configure DevTools globally (before creating states)
+ * import { configureDevtools } from 'zustand-kit';
+ * configureDevtools(false); // Disable DevTools
  *
  * // For non-React usage, see: getGlobalState, setGlobalState, subscribeGlobalState, resetGlobalState
  */
