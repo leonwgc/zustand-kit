@@ -20,6 +20,18 @@ const globalStates = new Map<string, UseBoundStore<StoreApi<unknown>>>();
 let enableDevtools = process.env.NODE_ENV !== 'production';
 
 /**
+ * Helper function to warn about missing global state in development
+ */
+function warnMissingState(key: string): void {
+  if (process.env.NODE_ENV !== 'production') {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `Global state with key "${key}" not found. Initialize it with useGlobalState first.`
+    );
+  }
+}
+
+/**
  * Configure global DevTools integration
  * @param enabled - Whether to enable Redux DevTools integration for all global states
  * @example
@@ -164,42 +176,45 @@ export function useGlobalState<T>(
       initialState !== null &&
       !Array.isArray(initialState);
 
-    const stateCreator: StateCreator<StoreState<T>, [], []> = (set, get) => ({
-      value: initialState,
-      setValue: (value) => {
-        if (typeof value === 'function') {
-          // Functional update
-          set((state) => {
-            const newValue = (value as (prev: T) => T)(state.value);
-            if (enableDevtools) {
-              syncToDevTools(key, newValue);
-            }
-            return { value: newValue };
-          });
-        } else if (isObject && typeof value === 'object' && value !== null) {
-          // Partial update for objects
-          set((state) => {
-            const newValue = { ...state.value, ...value } as T;
-            if (enableDevtools) {
-              syncToDevTools(key, newValue);
-            }
-            return { value: newValue };
-          });
-        } else {
-          // Direct value update
-          set({ value: value as T });
-          if (enableDevtools) {
-            syncToDevTools(key, value as T);
-          }
-        }
-      },
-      reset: () => {
-        set({ value: initialState });
+    const stateCreator: StateCreator<StoreState<T>, [], []> = (set, get) => {
+      const updateValue = (newValue: T) => {
+        set({ value: newValue });
         if (enableDevtools) {
-          syncToDevTools(key, initialState);
+          syncToDevTools(key, newValue);
         }
-      },
-    });
+      };
+
+      return {
+        value: initialState,
+        setValue: (value) => {
+          if (typeof value === 'function') {
+            // Functional update
+            set((state) => {
+              const newValue = (value as (prev: T) => T)(state.value);
+              if (enableDevtools) {
+                syncToDevTools(key, newValue);
+              }
+              return { value: newValue };
+            });
+          } else if (isObject && typeof value === 'object' && value !== null) {
+            // Partial update for objects
+            set((state) => {
+              const newValue = { ...state.value, ...value } as T;
+              if (enableDevtools) {
+                syncToDevTools(key, newValue);
+              }
+              return { value: newValue };
+            });
+          } else {
+            // Direct value update
+            updateValue(value as T);
+          }
+        },
+        reset: () => {
+          updateValue(initialState);
+        },
+      };
+    };
 
     let store: UseBoundStore<StoreApi<StoreState<T>>>;
 
@@ -296,13 +311,9 @@ export function useGlobalSelector<T, R>(
     );
   }
 
-  // Memoize selector to avoid recreation
+  // Keep selector in ref to avoid recreation while maintaining latest reference
   const selectorRef = useRef(selector);
-
-  // Keep ref updated
-  useEffect(() => {
-    selectorRef.current = selector;
-  });
+  selectorRef.current = selector;
 
   const wrappedSelector = useCallback(
     (state: StoreState<T>) => selectorRef.current(state.value),
@@ -382,12 +393,7 @@ export function setGlobalState<T>(key: string, value: SetterValue<T>): void {
   const store = globalStates.get(key) as UseBoundStore<StoreApi<StoreState<T>>>;
 
   if (!store) {
-    if (process.env.NODE_ENV !== 'production') {
-      // eslint-disable-next-line no-console
-      console.warn(
-        `Global state with key "${key}" not found. Initialize it with useGlobalState first.`
-      );
-    }
+    warnMissingState(key);
     return;
   }
 
@@ -410,12 +416,7 @@ export function subscribeGlobalState<T>(
   const store = globalStates.get(key) as UseBoundStore<StoreApi<StoreState<T>>>;
 
   if (!store) {
-    if (process.env.NODE_ENV !== 'production') {
-      // eslint-disable-next-line no-console
-      console.warn(
-        `Global state with key "${key}" not found. Initialize it with useGlobalState first.`
-      );
-    }
+    warnMissingState(key);
     // Return no-op unsubscribe function
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     return () => {};
@@ -445,12 +446,7 @@ export function resetGlobalState(key: string): void {
   >;
 
   if (!store) {
-    if (process.env.NODE_ENV !== 'production') {
-      // eslint-disable-next-line no-console
-      console.warn(
-        `Global state with key "${key}" not found. Initialize it with useGlobalState first.`
-      );
-    }
+    warnMissingState(key);
     return;
   }
 
