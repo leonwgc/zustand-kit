@@ -14,6 +14,26 @@ import { useShallow } from 'zustand/react/shallow';
 const globalStates = new Map<string, UseBoundStore<StoreApi<unknown>>>();
 
 /**
+ * Global DevTools configuration
+ * Auto-enabled in development, disabled in production by default
+ */
+let enableDevtools = process.env.NODE_ENV !== 'production';
+
+/**
+ * Configure global DevTools integration
+ * @param enabled - Whether to enable Redux DevTools integration for all global states
+ * @example
+ * // Disable DevTools in development
+ * configureDevtools(false);
+ *
+ * // Enable DevTools in production (not recommended)
+ * configureDevtools(true);
+ */
+export function configureDevtools(enabled: boolean): void {
+  enableDevtools = enabled;
+}
+
+/**
  * Unified DevTools store for aggregated state view
  */
 let devToolsStore: UseBoundStore<StoreApi<Record<string, unknown>>> | null =
@@ -85,11 +105,6 @@ export interface UseGlobalStateOptions {
    * @default 'global-state'
    */
   storageKey?: string;
-  /**
-   * Enable Redux DevTools integration (aggregated view only)
-   * @default true in development, false in production
-   */
-  enableDevtools?: boolean;
 }
 
 /**
@@ -127,15 +142,9 @@ export interface UseGlobalStateOptions {
  *   storageKey: 'my-app'
  * });
  *
- * // Disable aggregated DevTools in development
- * const [privateData, setPrivateData] = useGlobalState('private', {}, {
- *   enableDevtools: false
- * });
- *
- * // Force enable aggregated DevTools in production (not recommended)
- * const [debugData, setDebugData] = useGlobalState('debug', {}, {
- *   enableDevtools: true
- * });
+ * // Configure DevTools globally (before creating states)
+ * import { configureDevtools } from 'zustand-kit';
+ * configureDevtools(false); // Disable DevTools
  *
  * // For non-React usage, see: getGlobalState, setGlobalState, subscribeGlobalState, resetGlobalState
  */
@@ -147,9 +156,6 @@ export function useGlobalState<T>(
   const {
     storage = 'none',
     storageKey = 'global-state',
-    // Auto-enable Redux DevTools in development for better debugging experience
-    // Only aggregated view is shown, individual state stores don't have separate DevTools instances
-    enableDevtools = process.env.NODE_ENV !== 'production',
   } = options || {};
 
   if (!globalStates.has(key)) {
