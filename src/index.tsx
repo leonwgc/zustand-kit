@@ -89,10 +89,9 @@ export type StorageType = 'localStorage' | 'sessionStorage' | 'none';
 
 /**
  * Helper type for setter value - supports partial updates for objects
+ * Simplified to allow partial updates without type assertions
  */
-type SetterValue<T> = T extends Record<string, unknown>
-  ? Partial<T> | ((prev: T) => T)
-  : T | ((prev: T) => T);
+type SetterValue<T> = T | Partial<T> | ((prev: T) => T);
 
 /**
  * Internal store state structure

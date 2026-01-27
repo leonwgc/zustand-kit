@@ -137,7 +137,7 @@ describe('useGlobalState', () => {
 
       act(() => {
         const [, setUser] = result.current;
-        setUser({ name: 'Jane' } as Partial<User>);
+        setUser({ name: 'Jane' });
       });
 
       expect(result.current[0]).toEqual({
@@ -158,14 +158,14 @@ describe('useGlobalState', () => {
 
       act(() => {
         const [, setUser] = result.current;
-        setUser({ age: 31 } as Partial<User>);
+        setUser({ age: 31 });
       });
 
       expect(result.current[0].age).toBe(31);
 
       act(() => {
         const [, setUser] = result.current;
-        setUser({ email: 'jane@example.com' } as Partial<User>);
+        setUser({ email: 'jane@example.com' });
       });
 
       expect(result.current[0]).toEqual({

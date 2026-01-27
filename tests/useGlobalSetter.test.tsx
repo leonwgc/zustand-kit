@@ -68,7 +68,7 @@ describe('useGlobalSetter', () => {
       const { result: setterResult } = renderHook(() => useGlobalSetter<User>('user'));
 
       act(() => {
-        setterResult.current({ name: 'Jane' } as Partial<User>);
+        setterResult.current({ name: 'Jane' });
       });
 
       expect(stateResult.current[0].name).toBe('Jane');
@@ -87,7 +87,7 @@ describe('useGlobalSetter', () => {
       const { result: setterResult } = renderHook(() => useGlobalSetter<User>('user'));
 
       act(() => {
-        setterResult.current({ age: 31 } as Partial<User>);
+        setterResult.current({ age: 31 });
       });
 
       expect(stateResult.current[0]).toEqual({
