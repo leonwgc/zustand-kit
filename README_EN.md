@@ -108,26 +108,22 @@ function Settings() {
 
 ### Redux DevTools Integration
 
-In development mode, all global states are automatically integrated into a unified Redux DevTools view for debugging:
+In development mode, all global states are automatically integrated into a unified Redux DevTools view for debugging. DevTools uses global configuration and is automatically enabled/disabled based on environment by default:
 
 ```tsx
-import { useGlobalState } from 'zustand-kit';
+import { useGlobalState, configureDevtools } from 'zustand-kit';
 
-// DevTools auto-enabled in development (default behavior)
+// Default behavior: auto-enabled in development, auto-disabled in production
 const [data, setData] = useGlobalState('data', { count: 0 });
 
-// Disable DevTools (even in development)
-const [privateData, setPrivateData] = useGlobalState('private', {}, {
-  enableDevtools: false
-});
+// Globally disable DevTools (configure at app entry)
+configureDevtools(false);
 
-// Force enable DevTools in production (not recommended)
-const [debugData, setDebugData] = useGlobalState('debug', {}, {
-  enableDevtools: true
-});
+// Globally enable DevTools (configure at app entry, e.g., for production debugging, not recommended)
+configureDevtools(true);
 ```
 
-**Note:** All global states are aggregated into a single DevTools instance named `GlobalStates (All)`, where each state is displayed as a property with its key, making it easy to view and debug all states in one place.
+**Note:** All global states are aggregated into a single DevTools instance named `GlobalStates (All)`, where each state is displayed as a property with its key, making it easy to view and debug all states in one place. It's recommended to call `configureDevtools()` at your application entry point for global configuration.
 
 ### Selector Pattern (Performance Optimization)
 
@@ -242,11 +238,26 @@ Create or connect to a global state.
 - `options?: UseGlobalStateOptions` - Optional configuration
   - `storage?: 'localStorage' | 'sessionStorage' | 'none'` - Persistence type (default 'none')
   - `storageKey?: string` - Storage key prefix (default 'global-state')
-  - `enableDevtools?: boolean` - Enable Redux DevTools (default true in development, false in production)
 
 **Returns:** `[state, setState, resetState]`
 
 **Note:** For object type states, `setState` supports partial updates. For example: `setUser({ name: 'Jane' })` will only update the `name` field while keeping other fields unchanged.
+
+### `configureDevtools(enabled)`
+
+Globally configure Redux DevTools integration.
+
+**Parameters:**
+- `enabled: boolean` - Whether to enable Redux DevTools (default: true in development, false in production)
+
+**Example:**
+```typescript
+import { configureDevtools } from 'zustand-kit';
+
+// Configure at application entry point
+configureDevtools(false); // Disable DevTools
+configureDevtools(true);  // Enable DevTools
+```
 
 ### `useGlobalSelector<T, R>(key, selector, equalityMode?)`
 

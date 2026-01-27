@@ -108,26 +108,22 @@ function Settings() {
 
 ### Redux DevTools 集成
 
-在开发环境下，所有全局状态会自动集成到统一的 Redux DevTools 视图中，便于调试：
+在开发环境下，所有全局状态会自动集成到统一的 Redux DevTools 视图中，便于调试。DevTools 采用全局配置，默认根据环境变量自动启用/禁用：
 
 ```tsx
-import { useGlobalState } from 'zustand-kit';
+import { useGlobalState, configureDevtools } from 'zustand-kit';
 
-// 开发环境自动启用 DevTools（默认行为）
+// 默认行为：开发环境自动启用，生产环境自动禁用
 const [data, setData] = useGlobalState('data', { count: 0 });
 
-// 禁用 DevTools（即使在开发环境）
-const [privateData, setPrivateData] = useGlobalState('private', {}, {
-  enableDevtools: false
-});
+// 全局禁用 DevTools（在应用入口配置）
+configureDevtools(false);
 
-// 强制启用 DevTools（生产环境，不推荐）
-const [debugData, setDebugData] = useGlobalState('debug', {}, {
-  enableDevtools: true
-});
+// 全局启用 DevTools（在应用入口配置，如在生产环境调试，不推荐）
+configureDevtools(true);
 ```
 
-**注意：** 所有全局状态会聚合到一个名为 `GlobalStates (All)` 的 DevTools 实例中，每个状态以其 key 作为属性显示，方便统一查看和调试所有状态。
+**注意：** 所有全局状态会聚合到一个名为 `GlobalStates (All)` 的 DevTools 实例中，每个状态以其 key 作为属性显示，方便统一查看和调试所有状态。建议在应用入口处调用 `configureDevtools()` 进行全局配置。
 
 ### 选择器模式（性能优化）
 
@@ -242,11 +238,26 @@ resetGlobalState('counter');
 - `options?: UseGlobalStateOptions` - 可选配置
   - `storage?: 'localStorage' | 'sessionStorage' | 'none'` - 持久化类型（默认 'none'）
   - `storageKey?: string` - 存储键前缀（默认 'global-state'）
-  - `enableDevtools?: boolean` - 是否启用 Redux DevTools（开发环境默认 true，生产环境默认 false）
 
 **返回：** `[state, setState, resetState]`
 
 **注意：** 对于对象类型的状态，`setState` 支持部分更新。例如：`setUser({ name: 'Jane' })` 只会更新 `name` 字段，其他字段保持不变。
+
+### `configureDevtools(enabled)`
+
+全局配置 Redux DevTools 集成。
+
+**参数：**
+- `enabled: boolean` - 是否启用 Redux DevTools（默认：开发环境 true，生产环境 false）
+
+**使用示例：**
+```typescript
+import { configureDevtools } from 'zustand-kit';
+
+// 在应用入口处配置
+configureDevtools(false); // 禁用 DevTools
+configureDevtools(true);  // 启用 DevTools
+```
 
 ### `useGlobalSelector<T, R>(key, selector, equalityMode?)`
 
