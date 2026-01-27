@@ -62,7 +62,9 @@ describe('Non-React APIs', () => {
       const callback = vi.fn();
       const unsubscribe = subscribeGlobalState<number>('counter-3', callback);
 
-      setGlobalState('counter-3', 5);
+      act(() => {
+        setGlobalState('counter-3', 5);
+      });
 
       expect(callback).toHaveBeenCalledWith(5, 0);
 
@@ -75,12 +77,16 @@ describe('Non-React APIs', () => {
       const callback = vi.fn();
       const unsubscribe = subscribeGlobalState<number>('counter-4', callback);
 
-      setGlobalState('counter-4', 5);
+      act(() => {
+        setGlobalState('counter-4', 5);
+      });
       expect(callback).toHaveBeenCalledTimes(1);
 
       unsubscribe();
 
-      setGlobalState('counter-4', 10);
+      act(() => {
+        setGlobalState('counter-4', 10);
+      });
       expect(callback).toHaveBeenCalledTimes(1); // Should not be called again
     });
   });
@@ -111,13 +117,17 @@ describe('Non-React APIs', () => {
 
       expect(getGlobalState<number>('counter-6')).toBe(0);
 
-      setGlobalState('counter-6', 10);
+      act(() => {
+        setGlobalState('counter-6', 10);
+      });
       expect(getGlobalState<number>('counter-6')).toBe(10);
 
       const callback = vi.fn();
       const unsubscribe = subscribeGlobalState<number>('counter-6', callback);
 
-      setGlobalState('counter-6', (prev: number) => prev + 5);
+      act(() => {
+        setGlobalState('counter-6', (prev: number) => prev + 5);
+      });
       expect(getGlobalState<number>('counter-6')).toBe(15);
       expect(callback).toHaveBeenCalledWith(15, 10);
 
