@@ -164,16 +164,11 @@ export function useGlobalState<T>(
   initialState: T,
   options?: UseGlobalStateOptions
 ): [T, (value: SetterValue<T>) => void, () => void] {
-  const {
-    storage = 'none',
-    storageKey = 'global-state',
-  } = options || {};
+  const { storage = 'none', storageKey = 'global-state' } = options || {};
 
   if (!globalStates.has(key)) {
     const isObject =
-      typeof initialState === 'object' &&
-      initialState !== null &&
-      !Array.isArray(initialState);
+      typeof initialState === 'object' && !Array.isArray(initialState);
 
     const stateCreator: StateCreator<StoreState<T>, [], []> = (set, get) => {
       const updateValue = (newValue: T) => {
@@ -324,9 +319,7 @@ export function useGlobalSelector<T, R>(
     // Get initial value to detect type
     const initialValue = wrappedSelector(store.getState());
     const shouldUseShallow =
-      initialValue !== null &&
-      typeof initialValue === 'object' &&
-      !React.isValidElement(initialValue);
+      typeof initialValue === 'object' && !React.isValidElement(initialValue);
 
     if (shouldUseShallow) {
       return store(useShallow(wrappedSelector)) as R;

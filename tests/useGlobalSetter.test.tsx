@@ -22,8 +22,12 @@ describe('useGlobalSetter', () => {
     });
 
     it('should update state using setter', () => {
-      const { result: stateResult } = renderHook(() => useGlobalState('counter', 0));
-      const { result: setterResult } = renderHook(() => useGlobalSetter<number>('counter'));
+      const { result: stateResult } = renderHook(() =>
+        useGlobalState('counter', 0)
+      );
+      const { result: setterResult } = renderHook(() =>
+        useGlobalSetter<number>('counter')
+      );
 
       act(() => {
         setterResult.current(42);
@@ -33,8 +37,12 @@ describe('useGlobalSetter', () => {
     });
 
     it('should support functional updates', () => {
-      const { result: stateResult } = renderHook(() => useGlobalState('counter', 0));
-      const { result: setterResult } = renderHook(() => useGlobalSetter<number>('counter'));
+      const { result: stateResult } = renderHook(() =>
+        useGlobalState('counter', 0)
+      );
+      const { result: setterResult } = renderHook(() =>
+        useGlobalSetter<number>('counter')
+      );
 
       act(() => {
         setterResult.current((prev) => prev + 5);
@@ -64,8 +72,12 @@ describe('useGlobalSetter', () => {
         age: 30,
       };
 
-      const { result: stateResult } = renderHook(() => useGlobalState('user', initialUser));
-      const { result: setterResult } = renderHook(() => useGlobalSetter<User>('user'));
+      const { result: stateResult } = renderHook(() =>
+        useGlobalState('user', initialUser)
+      );
+      const { result: setterResult } = renderHook(() =>
+        useGlobalSetter<User>('user')
+      );
 
       act(() => {
         setterResult.current({ name: 'Jane' });
@@ -83,8 +95,12 @@ describe('useGlobalSetter', () => {
         age: 30,
       };
 
-      const { result: stateResult } = renderHook(() => useGlobalState('user', initialUser));
-      const { result: setterResult } = renderHook(() => useGlobalSetter<User>('user'));
+      const { result: stateResult } = renderHook(() =>
+        useGlobalState('user', initialUser)
+      );
+      const { result: setterResult } = renderHook(() =>
+        useGlobalSetter<User>('user')
+      );
 
       act(() => {
         setterResult.current({ age: 31 });
@@ -96,12 +112,55 @@ describe('useGlobalSetter', () => {
         age: 31,
       });
     });
+
+    it('should support partial updates for NULL initalValue', () => {
+      const { result: stateResult } = renderHook(() =>
+        useGlobalState('user', null)
+      );
+      const { result: setterResult } = renderHook(() =>
+        useGlobalSetter<User>('user')
+      );
+
+      act(() => {
+        setterResult.current({ name: 'wgc' });
+      });
+
+      expect(stateResult.current[0]).toEqual({
+        name: 'wgc',
+      });
+    });
+
+    it('should support partial updates for NULL initalValue', () => {
+      const { result: stateResult } = renderHook(() =>
+        useGlobalState('user', null)
+      );
+      const { result: setterResult } = renderHook(() =>
+        useGlobalSetter<User>('user')
+      );
+
+      act(() => {
+        setterResult.current({ name: 'wgc', age: 18 });
+      });
+
+      act(() => {
+        setterResult.current({ name: 'leon' });
+      });
+
+      expect(stateResult.current[0]).toEqual({
+        name: 'leon',
+        age: 18,
+      });
+    });
   });
 
   describe('Performance characteristics', () => {
     it('should not cause re-render when state changes', () => {
-      const { result: stateResult } = renderHook(() => useGlobalState('counter', 0));
-      const { result: setterResult, rerender } = renderHook(() => useGlobalSetter<number>('counter'));
+      const { result: stateResult } = renderHook(() =>
+        useGlobalState('counter', 0)
+      );
+      const { result: setterResult, rerender } = renderHook(() =>
+        useGlobalSetter<number>('counter')
+      );
 
       const initialSetter = setterResult.current;
 
@@ -116,9 +175,15 @@ describe('useGlobalSetter', () => {
     });
 
     it('should work with multiple setter hooks', () => {
-      const { result: stateResult } = renderHook(() => useGlobalState('counter', 0));
-      const { result: setter1 } = renderHook(() => useGlobalSetter<number>('counter'));
-      const { result: setter2 } = renderHook(() => useGlobalSetter<number>('counter'));
+      const { result: stateResult } = renderHook(() =>
+        useGlobalState('counter', 0)
+      );
+      const { result: setter1 } = renderHook(() =>
+        useGlobalSetter<number>('counter')
+      );
+      const { result: setter2 } = renderHook(() =>
+        useGlobalSetter<number>('counter')
+      );
 
       act(() => {
         setter1.current(5);
@@ -144,8 +209,12 @@ describe('useGlobalSetter', () => {
 
   describe('Different data types', () => {
     it('should work with string state', () => {
-      const { result: stateResult } = renderHook(() => useGlobalState('text', 'hello'));
-      const { result: setterResult } = renderHook(() => useGlobalSetter<string>('text'));
+      const { result: stateResult } = renderHook(() =>
+        useGlobalState('text', 'hello')
+      );
+      const { result: setterResult } = renderHook(() =>
+        useGlobalSetter<string>('text')
+      );
 
       act(() => {
         setterResult.current('world');
@@ -155,8 +224,12 @@ describe('useGlobalSetter', () => {
     });
 
     it('should work with boolean state', () => {
-      const { result: stateResult } = renderHook(() => useGlobalState('flag', false));
-      const { result: setterResult } = renderHook(() => useGlobalSetter<boolean>('flag'));
+      const { result: stateResult } = renderHook(() =>
+        useGlobalState('flag', false)
+      );
+      const { result: setterResult } = renderHook(() =>
+        useGlobalSetter<boolean>('flag')
+      );
 
       act(() => {
         setterResult.current(true);
@@ -166,8 +239,12 @@ describe('useGlobalSetter', () => {
     });
 
     it('should work with array state', () => {
-      const { result: stateResult } = renderHook(() => useGlobalState('list', [1, 2, 3]));
-      const { result: setterResult } = renderHook(() => useGlobalSetter<number[]>('list'));
+      const { result: stateResult } = renderHook(() =>
+        useGlobalState('list', [1, 2, 3])
+      );
+      const { result: setterResult } = renderHook(() =>
+        useGlobalSetter<number[]>('list')
+      );
 
       act(() => {
         setterResult.current([4, 5, 6]);
@@ -179,8 +256,12 @@ describe('useGlobalSetter', () => {
 
   describe('Integration with useGlobalState', () => {
     it('should sync with useGlobalState updates', () => {
-      const { result: stateResult } = renderHook(() => useGlobalState('sync', 0));
-      const { result: setterResult } = renderHook(() => useGlobalSetter<number>('sync'));
+      const { result: stateResult } = renderHook(() =>
+        useGlobalState('sync', 0)
+      );
+      const { result: setterResult } = renderHook(() =>
+        useGlobalSetter<number>('sync')
+      );
 
       act(() => {
         stateResult.current[1](10);
