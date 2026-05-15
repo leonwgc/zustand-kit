@@ -119,6 +119,119 @@ export interface UseGlobalStateOptions {
 }
 
 /**
+ * Internal function to create and register a store for a given key.
+ * Shared by useGlobalState and initGlobalState.
+ */
+function createStore<T>(
+  key: string,
+  initialState: T,
+  options?: UseGlobalStateOptions
+): void {
+  if (globalStates.has(key)) return;
+
+  const { storage = 'none', storageKey = 'global-state' } = options || {};
+
+  const stateCreator: StateCreator<StoreState<T>, [], []> = (set) => {
+    const updateValue = (newValue: T) => {
+      set({ value: newValue });
+      if (enableDevtools) {
+        syncToDevTools(key, newValue);
+      }
+    };
+
+    return {
+      value: initialState,
+      setValue: (value) => {
+        if (typeof value === 'function') {
+          set((state) => {
+            const newValue = (value as (prev: T) => T)(state.value);
+            if (enableDevtools) {
+              syncToDevTools(key, newValue);
+            }
+            return { value: newValue };
+          });
+        } else if (
+          typeof value === 'object' &&
+          value !== null &&
+          !Array.isArray(value)
+        ) {
+          set((state) => {
+            const currentIsObject =
+              typeof state.value === 'object' &&
+              state.value !== null &&
+              !Array.isArray(state.value);
+            const newValue = currentIsObject
+              ? ({ ...state.value, ...value } as T)
+              : (value as T);
+            if (enableDevtools) {
+              syncToDevTools(key, newValue);
+            }
+            return { value: newValue };
+          });
+        } else {
+          updateValue(value as T);
+        }
+      },
+      reset: () => {
+        updateValue(initialState);
+      },
+    };
+  };
+
+  let store: UseBoundStore<StoreApi<StoreState<T>>>;
+
+  if (storage !== 'none') {
+    const storageImpl =
+      storage === 'localStorage' ? localStorage : sessionStorage;
+
+    store = create<StoreState<T>>()(
+      persist(stateCreator, {
+        name: `${storageKey}-${key}`,
+        storage: createJSONStorage(() => storageImpl),
+      })
+    );
+  } else {
+    store = create<StoreState<T>>(stateCreator);
+  }
+
+  globalStates.set(key, store as UseBoundStore<StoreApi<unknown>>);
+
+  if (enableDevtools) {
+    getDevToolsStore();
+    syncToDevTools(key, initialState);
+  }
+}
+
+/**
+ * Initialize a global state outside of React components.
+ * Call this at app startup to ensure state is ready before any non-React code uses it.
+ *
+ * @param key - Unique key for the state
+ * @param initialState - Initial state value
+ * @param options - Same options as useGlobalState (storage, storageKey)
+ *
+ * @example
+ * // In your app entry point (before React renders)
+ * initGlobalState('counter', 0);
+ * initGlobalState('user', { name: 'John', age: 30 });
+ * initGlobalState('settings', { theme: 'dark' }, { storage: 'localStorage' });
+ *
+ * // Now these work reliably outside React:
+ * setGlobalState('counter', 1);
+ * const count = getGlobalState<number>('counter');
+ * const unsubscribe = subscribeGlobalState('counter', (next, prev) => {
+ *   console.log(prev, '->', next);
+ * });
+ */
+export function initGlobalState<T>(
+  key: string,
+  initialState: T,
+  options?: UseGlobalStateOptions
+): void {
+  createStore(key, initialState, options);
+}
+
+/**
  * Universal global state hook - supports both simple values and objects
  * Performance optimized with selector pattern and automatic Redux DevTools integration
  *
@@ -157,87 +270,14 @@ export interface UseGlobalStateOptions {
  * import { configureDevtools } from 'zustand-kit';
  * configureDevtools(false); // Disable DevTools
  *
- * // For non-React usage, see: getGlobalState, setGlobalState, subscribeGlobalState, resetGlobalState
+ * // For non-React usage, see: initGlobalState, getGlobalState, setGlobalState, subscribeGlobalState, resetGlobalState
  */
 export function useGlobalState<T>(
   key: string,
   initialState: T,
   options?: UseGlobalStateOptions
 ): [T, (value: SetterValue<T>) => void, () => void] {
-  const { storage = 'none', storageKey = 'global-state' } = options || {};
-
-  if (!globalStates.has(key)) {
-    const isObject =
-      typeof initialState === 'object' && !Array.isArray(initialState);
-
-    const stateCreator: StateCreator<StoreState<T>, [], []> = (set, get) => {
-      const updateValue = (newValue: T) => {
-        set({ value: newValue });
-        if (enableDevtools) {
-          syncToDevTools(key, newValue);
-        }
-      };
-
-      return {
-        value: initialState,
-        setValue: (value) => {
-          if (typeof value === 'function') {
-            // Functional update
-            set((state) => {
-              const newValue = (value as (prev: T) => T)(state.value);
-              if (enableDevtools) {
-                syncToDevTools(key, newValue);
-              }
-              return { value: newValue };
-            });
-          } else if (isObject && typeof value === 'object' && value !== null) {
-            // Partial update for objects
-            set((state) => {
-              const newValue = { ...state.value, ...value } as T;
-              if (enableDevtools) {
-                syncToDevTools(key, newValue);
-              }
-              return { value: newValue };
-            });
-          } else {
-            // Direct value update
-            updateValue(value as T);
-          }
-        },
-        reset: () => {
-          updateValue(initialState);
-        },
-      };
-    };
-
-    let store: UseBoundStore<StoreApi<StoreState<T>>>;
-
-    // Compose middlewares based on options
-    // Only persist middleware is applied, DevTools integration is aggregated only
-    if (storage !== 'none') {
-      // Persistence enabled
-      const storageImpl =
-        storage === 'localStorage' ? localStorage : sessionStorage;
-
-      store = create<StoreState<T>>()(
-        persist(stateCreator, {
-          name: `${storageKey}-${key}`,
-          storage: createJSONStorage(() => storageImpl),
-        })
-      );
-    } else {
-      // No middleware - minimal overhead
-      store = create<StoreState<T>>(stateCreator);
-    }
-
-    globalStates.set(key, store as UseBoundStore<StoreApi<unknown>>);
-
-    // Initialize unified DevTools and sync initial state AFTER store creation
-    if (enableDevtools) {
-      getDevToolsStore();
-      syncToDevTools(key, initialState);
-    }
-  }
+  createStore(key, initialState, options);
 
   const store = globalStates.get(key) as UseBoundStore<StoreApi<StoreState<T>>>;
 
