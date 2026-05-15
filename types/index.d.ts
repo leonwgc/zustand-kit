@@ -39,6 +39,28 @@ export interface UseGlobalStateOptions {
     storageKey?: string;
 }
 /**
+ * Initialize a global state outside of React components.
+ * Call this at app startup to ensure state is ready before any non-React code uses it.
+ *
+ * @param key - Unique key for the state
+ * @param initialState - Initial state value
+ * @param options - Same options as useGlobalState (storage, storageKey)
+ *
+ * @example
+ * // In your app entry point (before React renders)
+ * initGlobalState('counter', 0);
+ * initGlobalState('user', { name: 'John', age: 30 });
+ * initGlobalState('settings', { theme: 'dark' }, { storage: 'localStorage' });
+ *
+ * // Now these work reliably outside React:
+ * setGlobalState('counter', 1);
+ * const count = getGlobalState<number>('counter');
+ * const unsubscribe = subscribeGlobalState('counter', (next, prev) => {
+ *   console.log(prev, '->', next);
+ * });
+ */
+export declare function initGlobalState<T>(key: string, initialState: T, options?: UseGlobalStateOptions): void;
+/**
  * Universal global state hook - supports both simple values and objects
  * Performance optimized with selector pattern and automatic Redux DevTools integration
  *
@@ -77,7 +99,7 @@ export interface UseGlobalStateOptions {
  * import { configureDevtools } from 'zustand-kit';
  * configureDevtools(false); // Disable DevTools
  *
- * // For non-React usage, see: getGlobalState, setGlobalState, subscribeGlobalState, resetGlobalState
+ * // For non-React usage, see: initGlobalState, getGlobalState, setGlobalState, subscribeGlobalState, resetGlobalState
  */
 export declare function useGlobalState<T>(key: string, initialState: T, options?: UseGlobalStateOptions): [T, (value: SetterValue<T>) => void, () => void];
 /**
