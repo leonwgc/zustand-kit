@@ -18,12 +18,17 @@ import {
   useGlobalState,
   useGlobalSelector,
   useGlobalSetter,
+  initGlobalState,
   getGlobalState,
   setGlobalState,
   subscribeGlobalState,
   resetGlobalState,
 } from '../src/index';
 import './Example.scss';
+
+// Initialize non-React states at module level so they are ready before any
+// non-React code (services, timers, event handlers) accesses them.
+initGlobalState('non-react-counter', 0);
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -615,19 +620,23 @@ const NonReactUsageExample: React.FC = () => {
             fontSize: 12,
           }}
         >
-          {`// In any utility or service file
-import { getGlobalState, setGlobalState } from 'zustand-kit';
+          {`// 1. Initialize at app entry (before React renders)
+import { initGlobalState, getGlobalState, setGlobalState } from 'zustand-kit';
 
-// Get current value
+initGlobalState('counter', 0);
+
+// 2. Use anywhere in non-React code
 const count = getGlobalState<number>('counter');
 
-// Update value
+// Direct / functional / partial update
 setGlobalState('counter', count + 1);
+setGlobalState('counter', prev => prev + 1);
 
-// Subscribe to changes
+// Subscribe (remember to unsubscribe to avoid memory leaks)
 const unsubscribe = subscribeGlobalState('counter', (newVal, prevVal) => {
   console.log('Changed:', prevVal, '->', newVal);
-});`}
+});
+// Later: unsubscribe();`}
         </pre>
       </Space>
     </Card>
@@ -666,7 +675,7 @@ const NonReactStateDisplay: React.FC = () => {
 let renderCountEqualityFn = 0;
 const UserSelectorWithEqualityFn: React.FC = () => {
   renderCountEqualityFn++;
-  
+
   const userInfo = useGlobalSelector(
     'user',
     (state: { name: string; email: string; age: number }) => ({
@@ -717,9 +726,6 @@ const DevToolsExample: React.FC = () => {
       counter: 0,
       clicks: [] as number[],
       lastAction: 'none',
-    },
-    {
-      enableDevtools: true, // Explicitly enable (auto-enabled in dev mode)
     }
   );
 
@@ -797,15 +803,12 @@ const DevToolsExample: React.FC = () => {
           {`// Auto-enabled in dev (default)
 useGlobalState('key', initialState);
 
-// Explicitly enable
-useGlobalState('key', initialState, {
-  enableDevtools: true
-});
+// Globally disable DevTools at app entry
+import { configureDevtools } from 'zustand-kit';
+configureDevtools(false);
 
-// Disable in dev
-useGlobalState('key', initialState, {
-  enableDevtools: false
-});`}
+// Globally enable DevTools (e.g., for production debugging)
+configureDevtools(true);`}
         </pre>
       </Space>
     </Card>
@@ -1003,17 +1006,14 @@ setCount(prev => prev + 1);
                 {`// 开发环境自动启用 DevTools（默认）
 const [data, setData] = useGlobalState('data', { count: 0 });
 
-// 禁用 DevTools
-const [privateData, setPrivateData] = useGlobalState('private', {}, {
-  enableDevtools: false
-});
+// 在应用入口全局禁用 DevTools
+import { configureDevtools } from 'zustand-kit';
+configureDevtools(false);
 
-// 强制启用 DevTools（生产环境）
-const [debugData, setDebugData] = useGlobalState('debug', {}, {
-  enableDevtools: true
-});
+// 在应用入口全局启用 DevTools（如需在生产环境调试）
+configureDevtools(true);
 
-// 在 Redux DevTools 中显示为: GlobalState:data`}
+// 在 Redux DevTools 中显示为: GlobalStates (All)`}
               </pre>
             ),
           },

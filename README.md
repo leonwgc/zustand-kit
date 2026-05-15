@@ -197,15 +197,26 @@ function IncrementButton() {
 
 ## 🔧 非 React 环境使用
 
-zustand-kit 提供了独立的 API，可以在非 React 组件中使用：
+zustand-kit 提供了独立的 API，可以在非 React 组件中使用。
+
+> **注意：** 使用非 React API 前，必须先初始化状态。推荐在应用入口处调用 `initGlobalState` 完成初始化，避免在 React 组件挂载之前调用其他 API 时静默失败。
 
 ```typescript
 import {
+  initGlobalState,
   getGlobalState,
   setGlobalState,
   subscribeGlobalState,
   resetGlobalState
 } from 'zustand-kit';
+
+// 1. 在应用入口处初始化状态（React 渲染之前）
+initGlobalState('counter', 0);
+initGlobalState('user', { name: 'John', age: 30 });
+// 支持持久化选项，与 useGlobalState 相同
+initGlobalState('settings', { theme: 'dark' }, { storage: 'localStorage' });
+
+// 2. 之后可以在任意非 React 代码中安全使用
 
 // 获取状态
 const count = getGlobalState<number>('counter');
@@ -213,8 +224,9 @@ const count = getGlobalState<number>('counter');
 // 设置状态
 setGlobalState('counter', 5);
 setGlobalState('counter', prev => prev + 1);
+setGlobalState('user', { name: 'Jane' }); // 对象部分更新
 
-// 订阅状态变化
+// 订阅状态变化（记得保存并调用取消订阅函数，避免内存泄漏）
 const unsubscribe = subscribeGlobalState('counter', (newValue, prevValue) => {
   console.log(`Counter 从 ${prevValue} 变为 ${newValue}`);
 });
@@ -225,6 +237,8 @@ unsubscribe();
 // 重置状态
 resetGlobalState('counter');
 ```
+
+`initGlobalState` 与 `useGlobalState` 共享相同的 store，React 组件和非 React 代码操作的是同一份状态，修改会自动触发组件重渲染。
 
 ## 📖 API 参考
 
@@ -284,17 +298,26 @@ configureDevtools(true);  // 启用 DevTools
 
 **返回：** setter 函数
 
+### `initGlobalState<T>(key, initialState, options?)`
+
+在 React 组件外初始化全局状态。在应用入口调用，确保非 React 代码使用前状态已就绪。
+
+**参数：**
+- `key: string` - 状态的唯一标识符
+- `initialState: T` - 初始状态值
+- `options?: UseGlobalStateOptions` - 与 `useGlobalState` 相同的配置项
+
 ### `getGlobalState<T>(key)`
 
 获取全局状态值（非 React 环境）。
 
 ### `setGlobalState<T>(key, value)`
 
-设置全局状态值（非 React 环境）。
+设置全局状态值（非 React 环境）。支持直接赋值、部分更新（对象）和函数式更新。
 
 ### `subscribeGlobalState<T>(key, callback)`
 
-订阅全局状态变化（非 React 环境）。返回取消订阅函数。
+订阅全局状态变化（非 React 环境）。返回取消订阅函数，使用完毕后需调用以防止内存泄漏。
 
 ### `resetGlobalState(key)`
 

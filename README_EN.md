@@ -197,15 +197,26 @@ function IncrementButton() {
 
 ## 🔧 Non-React Usage
 
-zustand-kit provides standalone APIs that can be used outside React components:
+zustand-kit provides standalone APIs that can be used outside React components.
+
+> **Important:** Before using non-React APIs, the state must be initialized first. Call `initGlobalState` at your app entry point to ensure state is ready before any non-React code accesses it, avoiding silent failures.
 
 ```typescript
 import {
+  initGlobalState,
   getGlobalState,
   setGlobalState,
   subscribeGlobalState,
   resetGlobalState
 } from 'zustand-kit';
+
+// 1. Initialize state at app entry (before React renders)
+initGlobalState('counter', 0);
+initGlobalState('user', { name: 'John', age: 30 });
+// Supports the same options as useGlobalState
+initGlobalState('settings', { theme: 'dark' }, { storage: 'localStorage' });
+
+// 2. Safely use anywhere in non-React code
 
 // Get state
 const count = getGlobalState<number>('counter');
@@ -213,8 +224,9 @@ const count = getGlobalState<number>('counter');
 // Set state
 setGlobalState('counter', 5);
 setGlobalState('counter', prev => prev + 1);
+setGlobalState('user', { name: 'Jane' }); // Partial update for objects
 
-// Subscribe to state changes
+// Subscribe to state changes (save and call the unsubscribe fn to avoid memory leaks)
 const unsubscribe = subscribeGlobalState('counter', (newValue, prevValue) => {
   console.log(`Counter changed from ${prevValue} to ${newValue}`);
 });
@@ -225,6 +237,8 @@ unsubscribe();
 // Reset state
 resetGlobalState('counter');
 ```
+
+`initGlobalState` shares the same store as `useGlobalState`. React components and non-React code operate on the same state — modifications will automatically trigger component re-renders.
 
 ## 📖 API Reference
 
@@ -284,17 +298,26 @@ Get only the setter function without subscribing to state changes.
 
 **Returns:** Setter function
 
+### `initGlobalState<T>(key, initialState, options?)`
+
+Initialize a global state outside of React components. Call at app entry to ensure state is ready before any non-React code uses it.
+
+**Parameters:**
+- `key: string` - Unique identifier for the state
+- `initialState: T` - Initial state value
+- `options?: UseGlobalStateOptions` - Same options as `useGlobalState`
+
 ### `getGlobalState<T>(key)`
 
 Get global state value (non-React environment).
 
 ### `setGlobalState<T>(key, value)`
 
-Set global state value (non-React environment).
+Set global state value (non-React environment). Supports direct assignment, partial update (objects), and functional update.
 
 ### `subscribeGlobalState<T>(key, callback)`
 
-Subscribe to global state changes (non-React environment). Returns unsubscribe function.
+Subscribe to global state changes (non-React environment). Returns unsubscribe function — call it when done to prevent memory leaks.
 
 ### `resetGlobalState(key)`
 
