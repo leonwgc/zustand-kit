@@ -9,7 +9,7 @@
     "jsx": "react",
     "module": "ESNext",
     "sourceMap": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "noImplicitAny": false,
     "target": "ES2015",
@@ -21,6 +21,7 @@
     "removeComments": false,
     "declarationDir": "types",
     "lib": ["es2020", "esnext", "dom"],
+    "types": ["node"],
     "paths": {
       "antd-form-render": ["src"]
     }
