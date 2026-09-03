@@ -190,6 +190,11 @@ function createStore<T>(
         storage: createJSONStorage(() => storageImpl),
       })
     );
+    // Force initial write to storage so persistence is visible immediately
+    // (zustand persist is lazy — it only writes on state changes by default).
+    // If storage already had data, persist has rehydrated it and we write the
+    // rehydrated value back (idempotent).
+    store.setState(store.getState());
   } else {
     store = create<StoreState<T>>(stateCreator);
   }
