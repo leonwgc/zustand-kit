@@ -299,4 +299,40 @@ describe('useGlobalSelector', () => {
     expect(selectorResult.current).toBe('John');
     expect(renderCount).toBe(1);
   });
+
+  it('should force Object.is comparison when equalityMode is false', () => {
+    const { result: stateResult } = renderHook(() => useGlobalState('user-8', initialUser));
+
+    let renderCount = 0;
+    const { result: selectorResult } = renderHook(() => {
+      renderCount++;
+      // Force Object.is even though the primitive default would also use Object.is —
+      // this specifically exercises the explicit `equalityMode === false` branch.
+      return useGlobalSelector<User, string>(
+        'user-8',
+        (state) => state.name,
+        false
+      );
+    });
+
+    expect(selectorResult.current).toBe('John');
+    expect(renderCount).toBe(1);
+
+    act(() => {
+      const [, setUser] = stateResult.current;
+      setUser({ age: 31 });
+    });
+
+    // Name unchanged — Object.is says equal — no re-render.
+    expect(selectorResult.current).toBe('John');
+    expect(renderCount).toBe(1);
+
+    act(() => {
+      const [, setUser] = stateResult.current;
+      setUser({ name: 'Jane' });
+    });
+
+    expect(selectorResult.current).toBe('Jane');
+    expect(renderCount).toBe(2);
+  });
 });
