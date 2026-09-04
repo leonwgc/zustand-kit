@@ -23,6 +23,7 @@ import {
   setGlobalState,
   subscribeGlobalState,
   resetGlobalState,
+  configureDevtools,
 } from '../src/index';
 import './Example.scss';
 
@@ -718,8 +719,139 @@ const UserSelectorWithEqualityFn: React.FC = () => {
   );
 };
 
-// Example 11: DevTools Integration
+// Example 10b: Explicit 'shallow' equalityMode
+let renderCountExplicitShallow = 0;
+const UserSelectorExplicitShallow: React.FC = () => {
+  renderCountExplicitShallow++;
+
+  const userInfo = useGlobalSelector<
+    { name: string; email: string; age: number },
+    { name: string; email: string }
+  >(
+    'user',
+    (state) => ({ name: state.name, email: state.email }),
+    'shallow'
+  );
+
+  return (
+    <Card
+      title="Component E - equalityMode: 'shallow'"
+      className="use-global-state-example__card"
+    >
+      <Space direction="vertical" style={{ width: '100%' }}>
+        <Badge
+          count={renderCountExplicitShallow}
+          style={{ backgroundColor: '#13c2c2' }}
+        >
+          <Text strong>Render Count</Text>
+        </Badge>
+        <div style={{ marginTop: 12 }}>
+          <Text strong>Name: </Text>
+          <Text style={{ fontSize: 16, color: '#1890ff' }}>
+            {userInfo.name}
+          </Text>
+        </div>
+        <div>
+          <Text strong>Email: </Text>
+          <Text style={{ fontSize: 16, color: '#52c41a' }}>
+            {userInfo.email}
+          </Text>
+        </div>
+        <Divider />
+        <Text type="secondary" style={{ fontSize: 12 }}>
+          💡 Explicitly forces shallow comparison — same behavior as auto mode
+          for object returns, but makes intent visible in code.
+        </Text>
+      </Space>
+    </Card>
+  );
+};
+
+// Example 10c: Explicit Object.is (equalityMode: false) with primitive selector
+let renderCountObjectIs = 0;
+const UserSelectorObjectIs: React.FC = () => {
+  renderCountObjectIs++;
+
+  // Object.is only works safely with stable references (primitives).
+  const userAge = useGlobalSelector<
+    { name: string; email: string; age: number },
+    number
+  >('user', (state) => state.age, false);
+
+  return (
+    <Card
+      title="Component F - equalityMode: false (Object.is)"
+      className="use-global-state-example__card"
+    >
+      <Space direction="vertical" style={{ width: '100%' }}>
+        <Badge
+          count={renderCountObjectIs}
+          style={{ backgroundColor: '#eb2f96' }}
+        >
+          <Text strong>Render Count</Text>
+        </Badge>
+        <div style={{ marginTop: 12 }}>
+          <Text strong>Age: </Text>
+          <Text style={{ fontSize: 18, color: '#eb2f96' }}>{userAge}</Text>
+        </div>
+        <Divider />
+        <Text type="secondary" style={{ fontSize: 12 }}>
+          💡 Forces <Text code>Object.is</Text> — only re-renders when age
+          actually changes. Use with primitives / stable references.
+        </Text>
+      </Space>
+    </Card>
+  );
+};
+
+// Example 10d: Derived / computed selector
+let renderCountDerived = 0;
+const DerivedSelector: React.FC = () => {
+  renderCountDerived++;
+
+  // Selector returns a boolean derived from age — component only re-renders
+  // when the boolean flips, not on every age change.
+  const isAdult = useGlobalSelector<
+    { name: string; email: string; age: number },
+    boolean
+  >('user', (state) => state.age >= 18);
+
+  return (
+    <Card
+      title="Component G - Derived Selector"
+      className="use-global-state-example__card"
+    >
+      <Space direction="vertical" style={{ width: '100%' }}>
+        <Badge
+          count={renderCountDerived}
+          style={{ backgroundColor: '#fa8c16' }}
+        >
+          <Text strong>Render Count</Text>
+        </Badge>
+        <div style={{ marginTop: 12 }}>
+          <Text strong>Is Adult (age ≥ 18): </Text>
+          <Text
+            style={{
+              fontSize: 18,
+              color: isAdult ? '#52c41a' : '#f5222d',
+            }}
+          >
+            {isAdult ? 'Yes ✅' : 'No ❌'}
+          </Text>
+        </div>
+        <Divider />
+        <Text type="secondary" style={{ fontSize: 12 }}>
+          💡 Age changes 20 → 25 won&apos;t re-render — only crossing the
+          threshold triggers an update.
+        </Text>
+      </Space>
+    </Card>
+  );
+};
 const DevToolsExample: React.FC = () => {
+  const [devtoolsOn, setDevtoolsOn] = useState(
+    process.env.NODE_ENV !== 'production'
+  );
   const [debugData, setDebugData] = useGlobalState(
     'debug-data',
     {
@@ -745,6 +877,12 @@ const DevToolsExample: React.FC = () => {
     });
   };
 
+  const toggleDevtools = () => {
+    const next = !devtoolsOn;
+    configureDevtools(next);
+    setDevtoolsOn(next);
+  };
+
   return (
     <Card
       title="Redux DevTools Integration"
@@ -754,8 +892,19 @@ const DevToolsExample: React.FC = () => {
         <Text type="secondary" style={{ fontSize: 12 }}>
           🔍 Open Redux DevTools to see state changes in real-time
           <br />
-          State name: <Text code>GlobalState:debug-data</Text>
+          State name: <Text code>GlobalStates (All)</Text>
         </Text>
+        <Divider />
+        <Space>
+          <Text strong>DevTools:</Text>
+          <Badge
+            status={devtoolsOn ? 'success' : 'default'}
+            text={devtoolsOn ? 'Enabled' : 'Disabled'}
+          />
+          <Button size="small" onClick={toggleDevtools}>
+            {devtoolsOn ? 'Disable' : 'Enable'}
+          </Button>
+        </Space>
         <Divider />
         <div style={{ textAlign: 'center', padding: '20px 0' }}>
           <Text style={{ fontSize: 48, fontWeight: 'bold', color: '#722ed1' }}>
@@ -935,6 +1084,9 @@ resetUser();`}
           <UserNameDisplay />
           <CounterButtons />
           <UserSelectorWithEqualityFn />
+          <UserSelectorExplicitShallow />
+          <UserSelectorObjectIs />
+          <DerivedSelector />
         </div>
       )}
       {showOptimized && (
@@ -954,21 +1106,31 @@ resetUser();`}
                     overflow: 'auto',
                   }}
                 >
-                  {`// useGlobalSelector - 细粒度订阅
+                  {`// useGlobalSelector - 细粒度订阅（基本类型自动使用 Object.is）
 const userName = useGlobalSelector('user', state => state.name);
-// 只有 name 变化时才重渲染
 
-// 自动浅比较 - 对象返回值
+// 自动浅比较 - 对象返回值自动使用 useShallow
 const userInfo = useGlobalSelector('user', state => ({
   name: state.name,
   email: state.email
 }));
-// 自动检测对象类型并使用浅比较
 
-// useGlobalSetter - 只写模式
+// 显式浅比较（意图更明确）
+const userInfo2 = useGlobalSelector(
+  'user',
+  state => ({ name: state.name, email: state.email }),
+  'shallow'
+);
+
+// 强制 Object.is —— 用于基本类型 / 稳定引用
+const age = useGlobalSelector('user', state => state.age, false);
+
+// 派生 / 计算选择器 —— 只在结果变化时重渲染
+const isAdult = useGlobalSelector('user', state => state.age >= 18);
+
+// useGlobalSetter - 只写模式，不订阅状态
 const setCount = useGlobalSetter<number>('counter');
-setCount(prev => prev + 1);
-// 此组件不会因为 count 变化而重渲染`}
+setCount(prev => prev + 1);`}
                 </pre>
               ),
             },
