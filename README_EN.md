@@ -377,7 +377,7 @@ npm run test:watch
 npm run test:coverage
 ```
 
-Test Coverage: 93%+ (statements, branches, functions)
+Test Coverage: 100% (statements / branches / functions / lines), 80 test cases.
 
 ## 📄 License
 
